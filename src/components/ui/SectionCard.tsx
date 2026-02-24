@@ -7,10 +7,10 @@ interface SectionCardProps {
   children: React.ReactNode;
 }
 
-const colorMap = {
-  orange: "bg-[#ea580c]",
-  red: "bg-red-600",
-  dark: "bg-slate-800",
+const accentMap = {
+  orange: "border-[#ea580c]",
+  red: "border-red-500",
+  dark: "border-zinc-600",
 };
 
 export function SectionCard({
@@ -20,16 +20,18 @@ export function SectionCard({
   children,
 }: SectionCardProps) {
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-      <div className={`${colorMap[color]} px-4 py-3`}>
-        <h3 className="font-bold text-sm uppercase tracking-wide text-white">
+    <div className="mb-6 last:mb-0">
+      <div
+        className={`flex items-baseline gap-3 border-l-[3px] ${accentMap[color]} pl-3 mb-4`}
+      >
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.1em] text-zinc-500">
           {title}
         </h3>
         {subtitle && (
-          <p className="text-xs text-white/80 mt-0.5">{subtitle}</p>
+          <span className="text-[10px] text-zinc-400">{subtitle}</span>
         )}
       </div>
-      <div className="p-4 space-y-4">{children}</div>
+      <div className="space-y-4">{children}</div>
     </div>
   );
 }

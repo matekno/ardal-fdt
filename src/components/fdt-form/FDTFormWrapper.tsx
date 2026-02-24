@@ -7,6 +7,7 @@ import { reportSchema, createEmptyReport, compilarResumenMantenimiento, encabeza
 import type { Report } from "@/lib/schema";
 import { generateEmailHTML } from "@/lib/email-generator";
 import { TABS } from "@/lib/constants";
+import { ArrowLeft, ArrowRight, Envelope, Warning, Trash, ArrowUUpLeft } from "@phosphor-icons/react";
 
 import { SeccionEncabezado } from "./SeccionEncabezado";
 import { SeccionGeneral } from "./SeccionGeneral";
@@ -41,6 +42,7 @@ function hasAnyData(obj: Record<string, unknown>): boolean {
 export function FDTFormWrapper() {
   const [activeTab, setActiveTab] = useState("encabezado");
   const [previewHTML, setPreviewHTML] = useState<string | null>(null);
+  const [clearConfirm, setClearConfirm] = useState(false);
 
   const methods = useForm<Report>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -106,10 +108,9 @@ export function FDTFormWrapper() {
   };
 
   const onClearDraft = () => {
-    if (confirm("¿Borrar todos los datos del formulario?")) {
-      localStorage.removeItem(DRAFT_KEY);
-      reset(createEmptyReport());
-    }
+    localStorage.removeItem(DRAFT_KEY);
+    reset(createEmptyReport());
+    setClearConfirm(false);
   };
 
   // Calculate progress
@@ -123,24 +124,40 @@ export function FDTFormWrapper() {
     return hasAnyData(section as Record<string, unknown>);
   }).length;
 
+  // Encabezado info for header display
+  const enc = formData.encabezado as
+    | { fecha?: string; turno?: string; supervisor?: string }
+    | undefined;
+
   if (previewHTML) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Preview del Email
-          </h2>
-          <button
-            onClick={() => setPreviewHTML(null)}
-            className="px-4 py-2 text-sm font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-          >
-            Volver al formulario
-          </button>
+      <div className="min-h-[100dvh] bg-zinc-50 flex flex-col">
+        {/* Preview header */}
+        <header className="bg-zinc-950 border-b border-zinc-800 px-4 md:px-6 py-3 sticky top-0 z-20">
+          <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="w-2 h-2 rounded-full bg-[#ea580c] shrink-0" />
+              <span className="text-white font-bold text-sm tracking-tight">FDT</span>
+              <span className="text-zinc-500 text-xs hidden sm:inline">
+                Vista previa del email
+              </span>
+            </div>
+            <button
+              onClick={() => setPreviewHTML(null)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-white rounded border border-zinc-700 hover:border-zinc-500"
+              style={{ transition: "all 0.15s var(--ease-spring)" }}
+            >
+              <ArrowUUpLeft size={12} />
+              Volver al formulario
+            </button>
+          </div>
+        </header>
+        <div className="flex-1 max-w-5xl mx-auto w-full px-4 md:px-6 py-6">
+          <div
+            className="bg-white rounded border border-zinc-200 overflow-hidden"
+            dangerouslySetInnerHTML={{ __html: previewHTML }}
+          />
         </div>
-        <div
-          className="border border-gray-200 rounded-lg overflow-hidden"
-          dangerouslySetInnerHTML={{ __html: previewHTML }}
-        />
       </div>
     );
   }
@@ -149,125 +166,184 @@ export function FDTFormWrapper() {
     <FormProvider {...methods}>
       <form
         onSubmit={(e) => e.preventDefault()}
-        className="max-w-5xl mx-auto p-6"
+        className="min-h-[100dvh] flex flex-col bg-zinc-50"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Fin de Turno</h1>
-            <p className="text-gray-500 text-sm">
-              Reporte de producción — Ardal / Retak
-            </p>
+        {/* Top header bar */}
+        <header className="bg-zinc-950 border-b border-zinc-800 px-4 md:px-6 py-3 sticky top-0 z-20">
+          <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
+            {/* Brand + context */}
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-[#ea580c] shrink-0" />
+              <span className="text-white font-bold text-sm tracking-tight shrink-0">FDT</span>
+              {enc?.turno && (
+                <span className="text-zinc-500 text-xs truncate hidden sm:inline">
+                  {enc.turno.replace("TURNO ", "")}
+                  {enc.supervisor && ` — ${enc.supervisor.split(" - ")[0]}`}
+                  {enc.fecha && ` · ${enc.fecha}`}
+                </span>
+              )}
+            </div>
+
+            {/* Right: progress + clear */}
+            <div className="flex items-center gap-4 shrink-0">
+              <span className="text-xs font-mono tabular-nums text-zinc-500">
+                <span className="text-white">{filledCount}</span>
+                <span className="text-zinc-700">/{sectionKeys.length}</span>
+              </span>
+
+              {clearConfirm ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-zinc-500">¿Borrar todo?</span>
+                  <button
+                    type="button"
+                    onClick={onClearDraft}
+                    className="text-xs text-red-400 font-medium hover:text-red-300"
+                    style={{ transition: "color 0.15s var(--ease-spring)" }}
+                  >
+                    Borrar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setClearConfirm(false)}
+                    className="text-xs text-zinc-600 hover:text-zinc-400"
+                    style={{ transition: "color 0.15s var(--ease-spring)" }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setClearConfirm(true)}
+                  className="p-1.5 text-zinc-600 hover:text-red-400 rounded"
+                  title="Limpiar borrador"
+                  style={{ transition: "color 0.15s var(--ease-spring)" }}
+                >
+                  <Trash size={14} />
+                </button>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-500">
-              {filledCount}/{sectionKeys.length} secciones con datos
-            </span>
+        </header>
+
+        {/* Tab strip */}
+        <div className="bg-white border-b border-zinc-200 sticky top-[49px] z-10">
+          <div className="max-w-5xl mx-auto px-4 md:px-6">
+            <div className="flex overflow-x-auto scrollbar-hide">
+              {TABS.map((tab) => {
+                const isActive = activeTab === tab.id;
+                const sectionData = (formData as Record<string, unknown>)[
+                  tab.sectionKey
+                ];
+                const hasFilled: boolean =
+                  tab.id !== "encabezado" &&
+                  !!sectionData &&
+                  typeof sectionData === "object" &&
+                  hasAnyData(sectionData as Record<string, unknown>);
+
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`relative flex items-center gap-1.5 px-3 py-3 text-xs font-medium whitespace-nowrap border-b-2 shrink-0 ${
+                      isActive
+                        ? "border-[#ea580c] text-zinc-900"
+                        : "border-transparent text-zinc-400 hover:text-zinc-700 hover:border-zinc-300"
+                    }`}
+                    style={{
+                      transition:
+                        "color 0.15s var(--ease-spring), border-color 0.15s var(--ease-spring)",
+                    }}
+                  >
+                    {tab.label}
+                    {hasFilled && (
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                          isActive ? "bg-[#ea580c]" : "bg-emerald-500"
+                        }`}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 max-w-5xl mx-auto w-full px-4 md:px-6 py-6">
+          {/* Validation error */}
+          {Object.keys(errors).length > 0 && (
+            <div className="mb-5 flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+              <Warning size={14} className="shrink-0 text-red-500" weight="bold" />
+              Hay errores de validación en Encabezado. Revisá los campos obligatorios.
+            </div>
+          )}
+
+          {/* Active section */}
+          <div>
+            {activeTab === "encabezado" && <SeccionEncabezado />}
+            {activeTab === "general" && <SeccionGeneral />}
+            {activeTab === "personal" && <SeccionPersonal />}
+            {activeTab === "molino3" && <SeccionMolino molinoNumber={3} />}
+            {activeTab === "molino2" && <SeccionMolino molinoNumber={2} />}
+            {activeTab === "stockBarro" && <SeccionStockBarro />}
+            {activeTab === "salaControl" && <SeccionSalaControl />}
+            {activeTab === "maduracion" && <SeccionMaduracion />}
+            {activeTab === "corte" && <SeccionCorte />}
+            {activeTab === "rotador" && <SeccionRotador />}
+            {activeTab === "precurado" && <SeccionPrecurado />}
+            {activeTab === "caldera" && <SeccionCaldera />}
+            {activeTab === "desmolde" && <SeccionDesmolde />}
+            {activeTab === "granallado" && <SeccionGranallado />}
+            {activeTab === "scrap" && <SeccionScrap />}
+            {activeTab === "transformacion" && <SeccionTransformacion />}
+            {activeTab === "autoelevadores" && <SeccionAutoelevadores />}
+          </div>
+        </div>
+
+        {/* Footer navigation */}
+        <footer className="bg-white border-t border-zinc-200 sticky bottom-0 z-10">
+          <div className="max-w-5xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between gap-3">
             <button
               type="button"
-              onClick={onClearDraft}
-              className="text-xs text-gray-400 hover:text-red-500"
+              onClick={goPrev}
+              disabled={activeTabIndex === 0}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-zinc-600 bg-zinc-100 rounded hover:bg-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ transition: "all 0.15s var(--ease-spring)" }}
             >
-              Limpiar
+              <ArrowLeft size={14} />
+              Anterior
             </button>
-          </div>
-        </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 overflow-x-auto pb-2 mb-6 border-b border-gray-200">
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab.id;
-            const sectionData = (formData as Record<string, unknown>)[
-              tab.sectionKey
-            ];
-            const hasFilled: boolean =
-              tab.id !== "encabezado" &&
-              !!sectionData &&
-              typeof sectionData === "object" &&
-              hasAnyData(sectionData as Record<string, unknown>);
+            <span className="text-xs text-zinc-400 font-mono tabular-nums hidden sm:block">
+              {activeTabIndex + 1} / {TABS.length}
+            </span>
 
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-3 py-2 text-sm font-medium whitespace-nowrap rounded-t-lg transition-colors ${
-                  isActive
-                    ? "bg-[#ea580c] text-white"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
-              >
-                {tab.label}
-                {hasFilled && !isActive && (
-                  <span className="ml-1 text-green-500 text-xs">&#9679;</span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Validation errors */}
-        {Object.keys(errors).length > 0 && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-700 font-medium">
-              Hay errores de validación. Revise los campos obligatorios en
-              Encabezado.
-            </p>
-          </div>
-        )}
-
-        {/* Active section */}
-        <div className="mb-8">
-          {activeTab === "encabezado" && <SeccionEncabezado />}
-          {activeTab === "general" && <SeccionGeneral />}
-          {activeTab === "personal" && <SeccionPersonal />}
-          {activeTab === "molino3" && <SeccionMolino molinoNumber={3} />}
-          {activeTab === "molino2" && <SeccionMolino molinoNumber={2} />}
-          {activeTab === "stockBarro" && <SeccionStockBarro />}
-          {activeTab === "salaControl" && <SeccionSalaControl />}
-          {activeTab === "maduracion" && <SeccionMaduracion />}
-          {activeTab === "corte" && <SeccionCorte />}
-          {activeTab === "rotador" && <SeccionRotador />}
-          {activeTab === "precurado" && <SeccionPrecurado />}
-          {activeTab === "caldera" && <SeccionCaldera />}
-          {activeTab === "desmolde" && <SeccionDesmolde />}
-          {activeTab === "granallado" && <SeccionGranallado />}
-          {activeTab === "scrap" && <SeccionScrap />}
-          {activeTab === "transformacion" && <SeccionTransformacion />}
-          {activeTab === "autoelevadores" && <SeccionAutoelevadores />}
-        </div>
-
-        {/* Navigation */}
-        <div className="flex justify-between items-center">
-          <button
-            type="button"
-            onClick={goPrev}
-            disabled={activeTabIndex === 0}
-            className="px-5 py-2.5 text-sm font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            &larr; Anterior
-          </button>
-
-          <div className="flex gap-2">
             {activeTabIndex === TABS.length - 1 ? (
               <button
                 type="button"
                 onClick={onPreview}
-                className="px-6 py-2.5 text-sm font-medium bg-[#ea580c] text-white rounded-lg hover:bg-[#c2410c] transition-colors"
+                className="flex items-center gap-1.5 px-5 py-2 text-sm font-medium bg-[#ea580c] text-white rounded hover:bg-[#c2410c] active:scale-[0.98] active:translate-y-[1px]"
+                style={{ transition: "all 0.15s var(--ease-spring)" }}
               >
-                Preview Email
+                <Envelope size={14} />
+                Vista previa
               </button>
             ) : (
               <button
                 type="button"
                 onClick={goNext}
-                className="px-5 py-2.5 text-sm font-medium bg-[#ea580c] text-white rounded-lg hover:bg-[#c2410c] transition-colors"
+                className="flex items-center gap-1.5 px-5 py-2 text-sm font-medium bg-[#ea580c] text-white rounded hover:bg-[#c2410c] active:scale-[0.98] active:translate-y-[1px]"
+                style={{ transition: "all 0.15s var(--ease-spring)" }}
               >
-                Siguiente &rarr;
+                Siguiente
+                <ArrowRight size={14} />
               </button>
             )}
           </div>
-        </div>
+        </footer>
       </form>
     </FormProvider>
   );

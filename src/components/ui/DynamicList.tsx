@@ -1,6 +1,7 @@
 "use client";
 
 import { useFieldArray, useFormContext } from "react-hook-form";
+import { X, Plus } from "@phosphor-icons/react";
 
 interface DynamicListProps {
   name: string;
@@ -21,38 +22,47 @@ export function DynamicList({
   const { fields, append, remove } = useFieldArray({ control, name });
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gray-700">{label}</h4>
-        <span className="text-xs text-gray-500">
-          {fields.length} / {maxItems}
+    <div>
+      <div className="flex items-center justify-between mb-2.5">
+        <h4 className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em]">
+          {label}
+        </h4>
+        <span className="text-[10px] text-zinc-400 font-mono tabular-nums">
+          {fields.length}/{maxItems}
         </span>
       </div>
 
-      {fields.map((field, index) => (
-        <div
-          key={field.id}
-          className="border border-gray-200 rounded-lg p-3 bg-gray-50 relative"
-        >
-          <button
-            type="button"
-            onClick={() => remove(index)}
-            className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-lg leading-none"
-            title="Quitar"
-          >
-            &times;
-          </button>
-          <div className="pr-6">{renderItem(index)}</div>
+      {fields.length > 0 && (
+        <div className="divide-y divide-zinc-100 mb-3">
+          {fields.map((field, index) => (
+            <div
+              key={field.id}
+              className="flex items-start gap-2 group py-3 first:pt-0"
+            >
+              <div className="flex-1 min-w-0">{renderItem(index)}</div>
+              <button
+                type="button"
+                onClick={() => remove(index)}
+                className="shrink-0 p-1 text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100 rounded mt-0.5"
+                style={{ transition: "all 0.15s var(--ease-spring)" }}
+                title="Quitar"
+              >
+                <X size={13} weight="bold" />
+              </button>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
 
       <button
         type="button"
         onClick={() => append(newItem())}
         disabled={fields.length >= maxItems}
-        className="w-full py-2 px-4 text-sm font-medium text-[#ea580c] border border-dashed border-[#ea580c] rounded-lg hover:bg-orange-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        className="flex items-center gap-1.5 text-[12px] font-medium text-[#ea580c] hover:text-[#c2410c] disabled:opacity-40 disabled:cursor-not-allowed py-1"
+        style={{ transition: "color 0.15s var(--ease-spring)" }}
       >
-        + Agregar {label.toLowerCase()}
+        <Plus size={12} weight="bold" />
+        Agregar {label.toLowerCase()}
       </button>
     </div>
   );
