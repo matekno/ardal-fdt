@@ -5,7 +5,7 @@ import { useFormContext } from "react-hook-form";
 interface FormFieldProps {
   name: string;
   label: string;
-  type?: "text" | "number" | "date";
+  type?: "text" | "number" | "date" | "time";
   unit?: string;
   placeholder?: string;
 }

@@ -14,6 +14,29 @@ export const SUPERVISORES = [
   "96 - LARES, ROBERTO GERMAN",
 ] as const;
 
+export const OPERARIOS = [
+  "65 - BAIGORRIA, PABLO",
+  "86 - TELLO, MARIO DANIEL",
+  "96 - LARES, ROBERTO GERMAN",
+  "110 - PERALTA, JORGE OSCAR",
+  "140 - DIAZ, FRANCO",
+  "173 - ARANDA, CRISTIAN",
+  "219 - FLORES, CHRISTIAN HERNAN",
+  "294 - LENCINA, GASTON ALEJANDRO",
+  "320 - SOSA, DANIEL EDUARDO",
+  "328 - RAMOS, LEANDRO",
+  "385 - AGUIRRE, CLAUDIO FABIAN",
+  "399 - BERON, ERNESTO ANDRES",
+  "407 - ZAPATA, FEDERICO",
+  "492 - RODRIGUEZ, LUCIANO",
+  "519 - GUTIERREZ, SERGIO",
+  "546 - HERNANDEZ, PABLO",
+  "550 - LOPEZ, MARTIN",
+  "629 - MORALES, ESTEBAN",
+] as const;
+
+export const OBJETIVO_MOLDES_COLADOS = 19;
+
 export const MOTIVOS_AUSENCIA = [
   "AI - AUSENCIA INJUSTIFICADA",
   "ASA - AUSENTE SIN AVISO",
@@ -84,9 +107,8 @@ export const TABS: TabDef[] = [
   { id: "general", label: "General", sectionKey: "general" },
   { id: "personal", label: "Personal", sectionKey: "personal" },
   { id: "molino3", label: "Molino 3", sectionKey: "molino3" },
-  { id: "molino2", label: "Molino 2", sectionKey: "molino2" },
   { id: "stockBarro", label: "Stock Barro", sectionKey: "stockBarro" },
-  { id: "salaControl", label: "Sala Control", sectionKey: "salaControl" },
+  { id: "salaControl", label: "Sala de Colado", sectionKey: "salaControl" },
   { id: "maduracion", label: "Maduración", sectionKey: "maduracion" },
   { id: "corte", label: "Corte", sectionKey: "corteDesmantelado" },
   { id: "rotador", label: "Rotador", sectionKey: "rotador" },

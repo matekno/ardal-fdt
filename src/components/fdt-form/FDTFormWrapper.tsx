@@ -32,6 +32,7 @@ function hasAnyData(obj: Record<string, unknown>): boolean {
   return Object.values(obj).some((v) => {
     if (Array.isArray(v)) return v.length > 0;
     if (v === null || v === undefined) return false;
+    if (typeof v === "boolean") return v === true;
     if (typeof v === "string") return v.trim() !== "";
     if (typeof v === "number") return true;
     if (typeof v === "object") return hasAnyData(v as Record<string, unknown>);
@@ -286,8 +287,7 @@ export function FDTFormWrapper() {
             {activeTab === "encabezado" && <SeccionEncabezado />}
             {activeTab === "general" && <SeccionGeneral />}
             {activeTab === "personal" && <SeccionPersonal />}
-            {activeTab === "molino3" && <SeccionMolino molinoNumber={3} />}
-            {activeTab === "molino2" && <SeccionMolino molinoNumber={2} />}
+            {activeTab === "molino3" && <SeccionMolino />}
             {activeTab === "stockBarro" && <SeccionStockBarro />}
             {activeTab === "salaControl" && <SeccionSalaControl />}
             {activeTab === "maduracion" && <SeccionMaduracion />}

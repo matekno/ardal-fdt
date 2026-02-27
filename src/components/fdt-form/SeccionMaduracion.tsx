@@ -4,6 +4,7 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { FormField } from "@/components/ui/FormField";
 import { SelectField } from "@/components/ui/SelectField";
 import { TextAreaField } from "@/components/ui/TextAreaField";
+import { OrdenList } from "@/components/ui/OrdenList";
 import { CALOVENTORES_MODO } from "@/lib/constants";
 
 export function SeccionMaduracion() {
@@ -28,11 +29,9 @@ export function SeccionMaduracion() {
           unit="°"
         />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <FormField name="maduracion.cambioNylon" label="Cambio de nylon orden" />
-        <FormField name="maduracion.moldePinchado" label="Molde pinchado orden" />
-        <FormField name="maduracion.moldeFisurado" label="Molde fisurado orden" />
-      </div>
+      <OrdenList name="maduracion.cambioNylon" label="Cambio de nylon" />
+      <OrdenList name="maduracion.moldePinchado" label="Molde pinchado" />
+      <OrdenList name="maduracion.moldeFisurado" label="Molde fisurado" />
       <TextAreaField name="maduracion.demoras" label="Demoras" />
       <TextAreaField name="maduracion.mantenimiento" label="Mantenimiento" />
       <TextAreaField name="maduracion.limpieza" label="Limpieza" />

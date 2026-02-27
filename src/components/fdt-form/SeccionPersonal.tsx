@@ -82,41 +82,12 @@ export function SeccionPersonal() {
         />
       </div>
 
-      {/* ── Cambios de horario ── */}
-      <div className="border-t pt-4 mt-2">
-        <DynamicList
-          name="personal.cambiosHorario"
-          maxItems={5}
-          label="Cambio de horario"
-          newItem={() => ({ ausente: "", presente: "", comentario: "" })}
-          renderItem={(index) => (
-            <div className="space-y-2">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <FormField
-                  name={`personal.cambiosHorario.${index}.ausente`}
-                  label="Ausente"
-                />
-                <FormField
-                  name={`personal.cambiosHorario.${index}.presente`}
-                  label="Presente"
-                />
-              </div>
-              <TextAreaField
-                name={`personal.cambiosHorario.${index}.comentario`}
-                label="Comentario"
-                rows={2}
-              />
-            </div>
-          )}
-        />
-      </div>
-
-      {/* ── Horas extras ── */}
+      {/* ── Banco de Horas ── */}
       <div className="border-t pt-4 mt-2">
         <DynamicList
           name="personal.horasExtras"
           maxItems={5}
-          label="Hora extra"
+          label="Banco de Horas"
           newItem={() => ({ personal: "", desdeHora: "", hastaHora: "" })}
           renderItem={(index) => (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">

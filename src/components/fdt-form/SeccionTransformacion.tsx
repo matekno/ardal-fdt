@@ -21,7 +21,7 @@ function TransformacionSize({
         <FormField name={`${prefix}.cortados45`} label='Cortados "45"' type="number" unit="UN" />
         <FormField name={`${prefix}.ve`} label='Para "VE"' type="number" unit="UN" />
         <FormField name={`${prefix}.descarte`} label='Para "Descarte"' type="number" unit="UN" />
-        <FormField name={`${prefix}.descartePct`} label="% Descarte" type="number" unit="%" />
+        <FormField name={`${prefix}.palletsOExport`} label='O Exportación' type="number" unit="PLL" />
       </div>
     </div>
   );
@@ -34,6 +34,7 @@ export function SeccionTransformacion() {
         <TransformacionSize prefix="transformacion.x15" label="x 15" />
         <TransformacionSize prefix="transformacion.x175" label="x 17,5" />
         <TransformacionSize prefix="transformacion.x20" label="x 20" />
+        <TransformacionSize prefix="transformacion.x25" label="x 25" />
       </div>
 
       <div className="border-t pt-4 mt-2 space-y-4">

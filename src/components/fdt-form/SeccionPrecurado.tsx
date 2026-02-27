@@ -1,10 +1,15 @@
 "use client";
 
+import { useWatch } from "react-hook-form";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { FormField } from "@/components/ui/FormField";
 import { TextAreaField } from "@/components/ui/TextAreaField";
 
 export function SeccionPrecurado() {
+  const precu = useWatch({ name: "precuradoAutoclaves.moldesPreCurado" }) as number | null;
+  const atc2 = useWatch({ name: "precuradoAutoclaves.moldesATC2" }) as number | null;
+  const mostrarEnVias = precu === 12 && atc2 === 12;
+
   return (
     <SectionCard title="Precurado / Autoclaves">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -21,6 +26,14 @@ export function SeccionPrecurado() {
           unit="UN"
         />
       </div>
+      {mostrarEnVias && (
+        <FormField
+          name="precuradoAutoclaves.moldesEnVias"
+          label="Moldes en vías"
+          type="number"
+          unit="UN"
+        />
+      )}
       <TextAreaField name="precuradoAutoclaves.demoras" label="Demoras" />
       <TextAreaField name="precuradoAutoclaves.mantenimiento" label="Mantenimiento" />
       <TextAreaField name="precuradoAutoclaves.limpieza" label="Limpieza" />
