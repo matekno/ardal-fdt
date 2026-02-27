@@ -103,13 +103,13 @@ export function generateEmailHTML(report: Report): string {
     hd(m3.rendimientoHora) ||
     hd(m3.mantenimiento) ||
     hd(m3.aguaEnUso) ||
-    hd(m3.cuerposMoliendaKG);
+    hd(m3.cuerposMoliendaUN);
   const m2Has =
     hd(m2.horasMarcha) ||
     hd(m2.rendimientoHora) ||
     hd(m2.mantenimiento) ||
     hd(m2.aguaEnUso) ||
-    hd(m2.cuerposMoliendaKG);
+    hd(m2.cuerposMoliendaUN);
   const sbHas = hd(sb.arena) || hd(sb.recupero);
 
   if (m3Has || m2Has || sbHas) {
@@ -128,7 +128,8 @@ export function generateEmailHTML(report: Report): string {
           "UN"
         )
       );
-      mRows.push(valRow("Cuerpos molienda", m3.cuerposMoliendaKG, "KG"));
+      if (m3.cuerposMoliendaUN !== null)
+        mRows.push(valRow("Cuerpos molienda", m3.cuerposMoliendaUN * 30, "KG"));
       mRows.push(valRow("Agua en uso", m3.aguaEnUso));
       mRows.push(txtRow("Mantenimiento", m3.mantenimiento));
       mRows.push(txtRow("Limpieza", m3.limpieza));
@@ -144,7 +145,8 @@ export function generateEmailHTML(report: Report): string {
           "UN"
         )
       );
-      mRows.push(valRow("Cuerpos molienda", m2.cuerposMoliendaKG, "KG"));
+      if (m2.cuerposMoliendaUN !== null)
+        mRows.push(valRow("Cuerpos molienda", m2.cuerposMoliendaUN * 30, "KG"));
       mRows.push(valRow("Agua en uso", m2.aguaEnUso));
       mRows.push(txtRow("Mantenimiento", m2.mantenimiento));
       mRows.push(txtRow("Limpieza", m2.limpieza));
@@ -478,7 +480,9 @@ function valRow(
 ): string {
   if (!hd(value)) return "";
   const display =
-    typeof value === "number" ? fmtNum(value) : esc(String(value));
+    typeof value === "boolean" ? "Sí"
+    : typeof value === "number" ? fmtNum(value)
+    : esc(String(value));
   const unitStr = unit
     ? `<span style="color:#94a3b8;font-size:11px;margin-left:3px;">${unit}</span>`
     : "";
@@ -521,6 +525,7 @@ function hd(val: unknown): boolean {
   if (val === null || val === undefined) return false;
   if (typeof val === "string") return val.trim() !== "";
   if (typeof val === "number") return true;
+  if (typeof val === "boolean") return val === true; // solo incluir si es true (novedad)
   return false;
 }
 

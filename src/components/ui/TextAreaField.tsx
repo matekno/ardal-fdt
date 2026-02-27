@@ -18,13 +18,11 @@ export function TextAreaField({
   const { register } = useFormContext();
 
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-gray-700">{label}</label>
-      <textarea
-        {...register(name)}
-        placeholder={placeholder}
-        rows={rows}
-      />
+    <div className="flex flex-col gap-1.5">
+      <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em]">
+        {label}
+      </label>
+      <textarea {...register(name)} placeholder={placeholder} rows={rows} />
     </div>
   );
 }

@@ -1,31 +1,47 @@
 "use client";
 
 import { signIn } from "next-auth/react";
+import { Warning } from "@phosphor-icons/react";
 
 export function LoginCard({ isUnauthorized }: { isUnauthorized: boolean }) {
   return (
-    <div className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-extrabold text-[#ea580c] mb-1">FDT</h1>
-        <p className="text-gray-500 text-sm">Fin de Turno — Ardal / Retak</p>
+    <div className="w-full max-w-sm">
+      {/* Mobile branding */}
+      <div className="lg:hidden mb-8">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="w-2 h-2 rounded-full bg-[#ea580c]" />
+          <span className="text-zinc-400 text-xs tracking-[0.18em] uppercase font-medium">
+            Ardal / Retak
+          </span>
+        </div>
+        <h1 className="text-3xl font-black tracking-tight text-zinc-900">FDT</h1>
+        <p className="text-zinc-500 text-sm">Fin de Turno</p>
       </div>
 
+      <p className="text-[11px] font-semibold text-zinc-400 tracking-[0.18em] uppercase mb-8">
+        Acceso al sistema
+      </p>
+
       {isUnauthorized && (
-        <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-700 font-medium">
-            Tu cuenta de Google no tiene acceso a esta aplicación.
-          </p>
-          <p className="text-xs text-red-500 mt-1">
-            Contactá al administrador si necesitás acceso.
-          </p>
+        <div className="mb-6 flex items-start gap-2.5 p-3 bg-red-50 border border-red-200 rounded-md">
+          <Warning size={14} className="text-red-500 shrink-0 mt-0.5" weight="bold" />
+          <div>
+            <p className="text-sm text-red-700 font-medium leading-snug">
+              Tu cuenta no tiene acceso a esta aplicación.
+            </p>
+            <p className="text-xs text-red-500 mt-0.5">
+              Contactá al administrador si necesitás acceso.
+            </p>
+          </div>
         </div>
       )}
 
       <button
         onClick={() => signIn("google", { callbackUrl: "/" })}
-        className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700"
+        className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white border border-zinc-200 rounded-md text-sm font-medium text-zinc-700 hover:border-zinc-400 active:scale-[0.99] active:translate-y-[1px]"
+        style={{ transition: "all 0.2s var(--ease-spring)" }}
       >
-        <svg className="w-5 h-5" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
           <path
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
             fill="#4285F4"
@@ -46,7 +62,7 @@ export function LoginCard({ isUnauthorized }: { isUnauthorized: boolean }) {
         Ingresar con Google
       </button>
 
-      <p className="text-xs text-gray-400 text-center mt-6">
+      <p className="text-[11px] text-zinc-400 text-center mt-6">
         Solo cuentas autorizadas de Ardal
       </p>
     </div>

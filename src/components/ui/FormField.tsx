@@ -20,8 +20,10 @@ export function FormField({
   const { register } = useFormContext();
 
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-gray-700">{label}</label>
+    <div className="flex flex-col gap-1.5">
+      <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em]">
+        {label}
+      </label>
       <div className="flex items-center gap-2">
         <input
           {...register(name)}
@@ -31,7 +33,7 @@ export function FormField({
           className="flex-1"
         />
         {unit && (
-          <span className="text-sm text-gray-500 font-medium min-w-[40px]">
+          <span className="text-[11px] text-zinc-400 font-mono shrink-0 min-w-[32px]">
             {unit}
           </span>
         )}

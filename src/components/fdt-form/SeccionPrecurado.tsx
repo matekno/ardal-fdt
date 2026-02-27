@@ -12,11 +12,13 @@ export function SeccionPrecurado() {
           name="precuradoAutoclaves.moldesPreCurado"
           label="Moldes en sala de pre-curado"
           type="number"
+          unit="UN"
         />
         <FormField
           name="precuradoAutoclaves.moldesATC2"
           label="Moldes en ATC 2"
           type="number"
+          unit="UN"
         />
       </div>
       <TextAreaField name="precuradoAutoclaves.demoras" label="Demoras" />

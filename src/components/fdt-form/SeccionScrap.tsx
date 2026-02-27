@@ -23,6 +23,7 @@ export function SeccionScrap() {
           name="scrap.moldesPendientes"
           label="Moldes pendientes a desmoldar"
           type="number"
+          unit="moldes"
         />
       </div>
     </SectionCard>

@@ -9,7 +9,7 @@ export function SeccionSalaControl() {
     <SectionCard title="Sala de Control">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField name="salaControl.horaInicio" label="Hora de inicio" unit="HS" />
-        <FormField name="salaControl.moldesColados" label="Moldes colados" />
+        <FormField name="salaControl.moldesColados" label="Moldes colados" type="number" unit="UN" />
         <FormField name="salaControl.dintelColado" label="Dintel colado orden" />
         <FormField name="salaControl.cambioCemento" label="Cambio de cemento orden" />
         <FormField name="salaControl.cambioCal" label="Cambio de cal orden" />
