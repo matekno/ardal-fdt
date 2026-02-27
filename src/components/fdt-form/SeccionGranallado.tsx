@@ -11,6 +11,7 @@ export function SeccionGranallado() {
         name="granallado.planchasGranalladas"
         label="Planchas granalladas"
         type="number"
+        unit="UN"
       />
       <TextAreaField name="granallado.demoras" label="Demoras" />
       <TextAreaField name="granallado.mantenimiento" label="Mantenimiento" />

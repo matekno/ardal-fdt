@@ -1,5 +1,6 @@
 "use client";
 
+import { useWatch } from "react-hook-form";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { FormField } from "@/components/ui/FormField";
 import { SelectField } from "@/components/ui/SelectField";
@@ -12,6 +13,8 @@ interface SeccionMolinoProps {
 
 export function SeccionMolino({ molinoNumber }: SeccionMolinoProps) {
   const prefix = molinoNumber === 3 ? "molino3" : "molino2";
+  const unValue = useWatch({ name: `${prefix}.cuerposMoliendaUN` }) as number | null;
+  const kgCalculado = unValue != null ? unValue * 30 : null;
 
   return (
     <SectionCard title={`Molino ${molinoNumber}`}>
@@ -42,12 +45,20 @@ export function SeccionMolino({ molinoNumber }: SeccionMolinoProps) {
           type="number"
           unit="UN"
         />
-        <FormField
-          name={`${prefix}.cuerposMoliendaKG`}
-          label="Cuerpos molienda"
-          type="number"
-          unit="KG"
-        />
+        {/* KG auto-calculado: no se guarda, solo se muestra */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-[0.08em]">
+            Cuerpos molienda
+          </span>
+          <div className="flex items-center gap-2">
+            <span className="flex-1 px-2 py-[0.35rem] rounded-md bg-zinc-100 text-sm font-mono text-zinc-400 border border-zinc-200">
+              {kgCalculado != null ? kgCalculado : "—"}
+            </span>
+            <span className="text-[11px] text-zinc-400 font-mono shrink-0 min-w-[32px]">
+              KG
+            </span>
+          </div>
+        </div>
       </div>
 
       <SelectField
