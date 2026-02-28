@@ -8,8 +8,11 @@ import { TextAreaField } from "@/components/ui/TextAreaField";
 import { AGUA_EN_USO } from "@/lib/constants";
 
 export function SeccionMolino() {
-  const rendimiento = useWatch({ name: "molino3.rendimientoHora" }) as number | null;
-  const mostrarCausa = rendimiento !== null && rendimiento !== undefined && rendimiento < 50;
+  const rendimientoRaw = useWatch({ name: "molino3.rendimientoHora" });
+  const rendimientoNum = rendimientoRaw !== "" && rendimientoRaw !== null && rendimientoRaw !== undefined
+    ? Number(rendimientoRaw)
+    : null;
+  const mostrarCausa = rendimientoNum !== null && !isNaN(rendimientoNum) && rendimientoNum < 50;
 
   return (
     <SectionCard title="Molino 3">
@@ -42,6 +45,7 @@ export function SeccionMolino() {
           name="molino3.causaBajoRendimiento"
           label="Causa bajo rendimiento"
           rows={2}
+          required
         />
       )}
 

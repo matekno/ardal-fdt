@@ -8,12 +8,13 @@ import { OrdenList } from "@/components/ui/OrdenList";
 import { OBJETIVO_MOLDES_COLADOS } from "@/lib/constants";
 
 export function SeccionSalaControl() {
-  const moldesColados = useWatch({ name: "salaControl.moldesColados" }) as number | null;
-
-  const desvio =
-    moldesColados !== null && moldesColados !== undefined
-      ? moldesColados - OBJETIVO_MOLDES_COLADOS
-      : null;
+  const moldesRaw = useWatch({ name: "salaControl.moldesColados" });
+  const moldesNum = moldesRaw !== "" && moldesRaw !== null && moldesRaw !== undefined
+    ? Number(moldesRaw)
+    : null;
+  const desvio = moldesNum !== null && !isNaN(moldesNum)
+    ? moldesNum - OBJETIVO_MOLDES_COLADOS
+    : null;
 
   return (
     <SectionCard title="Sala de Colado">
@@ -38,7 +39,7 @@ export function SeccionSalaControl() {
           {desvio !== null && (
             <span
               className={`ml-2 font-semibold ${
-                desvio >= 0 ? "text-emerald-600" : "text-orange-600"
+                desvio >= 0 ? "text-emerald-600" : "text-red-600"
               }`}
             >
               {desvio >= 0

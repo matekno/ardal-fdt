@@ -435,12 +435,25 @@ export function FDTFormWrapper() {
         {/* Content */}
         <div className="flex-1 max-w-5xl mx-auto w-full px-4 md:px-6 py-6">
           {/* Validation error */}
-          {Object.keys(errors).length > 0 && (
-            <div className="mb-5 flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
-              <Warning size={14} className="shrink-0 text-red-500" weight="bold" />
-              Hay errores de validación en Encabezado. Revisá los campos obligatorios.
-            </div>
-          )}
+          {Object.keys(errors).length > 0 && (() => {
+            const errorKeys = Object.keys(errors);
+            const sectionsWithErrors = TABS
+              .filter((t) => errorKeys.includes(t.sectionKey) || errorKeys.includes(t.id))
+              .map((t) => t.label);
+            return (
+              <div className="mb-5 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                <Warning size={14} className="shrink-0 text-red-500 mt-0.5" weight="bold" />
+                <span>
+                  Hay campos con errores.{" "}
+                  {sectionsWithErrors.length > 0 && (
+                    <span className="font-semibold">
+                      Revisá: {sectionsWithErrors.join(", ")}
+                    </span>
+                  )}
+                </span>
+              </div>
+            );
+          })()}
 
           {/* Active section */}
           <div>

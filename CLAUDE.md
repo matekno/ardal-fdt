@@ -4,9 +4,15 @@
 App web interna de reporte de producción por turno para la fábrica de ladrillos HCCA Ardal/Retak.
 Los supervisores completan un formulario de 16 secciones y se genera un email HTML con el reporte.
 
-## Objetivo a corto / mediano plazo
+### Objetivo a corto / mediano plazo
 Que los supervisores de mantenimiento utilicen esta herramienta para el mail de fin de turno de producción.
-Que los interesados puedan tomar decisiones con 
+
+### Objetivo a mediano plazo
+Que esta aplicación sirva también como repositorio para que los interesados puedan tomar decisiones con datos en el historial de esta aplicación.
+
+### Objetivo a largo plazo
+Reemplazar todos los mails de fin de turno del resto de áreas de la empresa con esta aplicación, para compartir información e integrar con otras fuentes de verdad de la empresa. 
+Que esta aplicación sea un faro de excelencia y un ejemplo de lo que la mejora continua integrada con IA puede lograr.
 
 
 ## Stack

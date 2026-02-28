@@ -132,13 +132,26 @@ export const personalSchema = z.object({
 });
 
 export const molino3Schema = z.object({
-  horasMarcha: reqNum.pipe(z.number().max(8)),
+  horasMarcha: reqNum.pipe(z.number().max(8, "Máximo 8 HS")),
   rendimientoHora: reqNum,
   cuerposMoliendaKG: reqNum,
   causaBajoRendimiento: z.string(),
   aguaEnUso: z.string(),
   mantenimiento: z.string(),
   limpieza: z.string(),
+}).superRefine((data, ctx) => {
+  const rend = typeof data.rendimientoHora === "number"
+    ? data.rendimientoHora
+    : Number(data.rendimientoHora);
+  if (!isNaN(rend) && rend < 50) {
+    if (!data.causaBajoRendimiento || !data.causaBajoRendimiento.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Obligatorio cuando el rendimiento es menor a 50 CM",
+        path: ["causaBajoRendimiento"],
+      });
+    }
+  }
 });
 
 export const stockBarroSchema = z.object({
@@ -162,9 +175,9 @@ export const salaControlSchema = z.object({
 });
 
 export const maduracionSchema = z.object({
-  moldesEnSala: reqNum.pipe(z.number().min(0).max(30)),
+  moldesEnSala: reqNum.pipe(z.number().min(0, "Mínimo 0").max(30, "Máximo 30")),
   caloventoresModo: z.string().min(1, "Campo obligatorio"),
-  caloventoresTemp: reqNum.pipe(z.number().min(45).max(60)),
+  caloventoresTemp: reqNum.pipe(z.number().min(45, "Mínimo 45°").max(60, "Máximo 60°")),
   cambioNylon: z.array(ordenItemSchema).max(5),
   moldePinchado: z.array(ordenItemSchema).max(5),
   moldeFisurado: z.array(ordenItemSchema).max(5),
@@ -189,15 +202,15 @@ export const rotadorSchema = z.object({
 });
 
 export const precuradoAutoclavesSchema = z.object({
-  moldesPreCurado: reqNum.pipe(z.number().min(0).max(12)),
-  moldesATC2: reqNum.pipe(z.number().min(0).max(12)),
+  moldesPreCurado: reqNum.pipe(z.number().min(0, "Mínimo 0").max(12, "Máximo 12")),
+  moldesATC2: reqNum.pipe(z.number().min(0, "Mínimo 0").max(12, "Máximo 12")),
   moldesEnVias: z.preprocess(
     (val) => {
       if (val === "" || val === null || val === undefined) return null;
       const n = Number(val);
       return isNaN(n) ? null : Math.round(n);
     },
-    z.number().int().min(0).nullable()
+    z.number().int().min(0, "Mínimo 0").nullable()
   ),
   demoras: z.string(),
   mantenimiento: z.string(),

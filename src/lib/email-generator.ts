@@ -553,9 +553,12 @@ function hd(val: unknown): boolean {
 }
 
 function hasAnyField(obj: Record<string, unknown>): boolean {
-  return Object.values(obj).some((v) =>
-    Array.isArray(v) ? v.length > 0 : hd(v)
-  );
+  return Object.values(obj).some((v) => {
+    if (Array.isArray(v)) return v.length > 0;
+    if (v !== null && v !== undefined && typeof v === "object")
+      return hasAnyField(v as Record<string, unknown>);
+    return hd(v);
+  });
 }
 
 function fmtNum(n: number | null | undefined): string {
