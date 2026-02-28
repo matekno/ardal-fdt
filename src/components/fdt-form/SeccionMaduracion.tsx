@@ -15,18 +15,21 @@ export function SeccionMaduracion() {
         label="Moldes en sala a fin de turno"
         type="number"
         unit="UN"
+        required
       />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <SelectField
           name="maduracion.caloventoresModo"
           label="Caloventores — Modo"
           options={CALOVENTORES_MODO}
+          required
         />
         <FormField
           name="maduracion.caloventoresTemp"
           label="Caloventores — Temperatura"
           type="number"
           unit="°"
+          required
         />
       </div>
       <OrdenList name="maduracion.cambioNylon" label="Cambio de nylon" />

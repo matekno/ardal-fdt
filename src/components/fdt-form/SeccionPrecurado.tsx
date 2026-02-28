@@ -6,9 +6,9 @@ import { FormField } from "@/components/ui/FormField";
 import { TextAreaField } from "@/components/ui/TextAreaField";
 
 export function SeccionPrecurado() {
-  const precu = useWatch({ name: "precuradoAutoclaves.moldesPreCurado" }) as number | null;
-  const atc2 = useWatch({ name: "precuradoAutoclaves.moldesATC2" }) as number | null;
-  const mostrarEnVias = precu === 12 && atc2 === 12;
+  const precu = useWatch({ name: "precuradoAutoclaves.moldesPreCurado" });
+  const atc2 = useWatch({ name: "precuradoAutoclaves.moldesATC2" });
+  const mostrarEnVias = Number(precu) === 12 && Number(atc2) === 12;
 
   return (
     <SectionCard title="Precurado / Autoclaves">
@@ -18,12 +18,14 @@ export function SeccionPrecurado() {
           label="Moldes en sala de pre-curado"
           type="number"
           unit="UN"
+          required
         />
         <FormField
           name="precuradoAutoclaves.moldesATC2"
           label="Moldes en ATC 2"
           type="number"
           unit="UN"
+          required
         />
       </div>
       {mostrarEnVias && (

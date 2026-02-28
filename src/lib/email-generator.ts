@@ -3,7 +3,7 @@
  */
 
 import type { Report, OrdenItem } from "./schema";
-import { OBJETIVO_MOLDES_COLADOS } from "./constants";
+import { OBJETIVO_MOLDES_COLADOS, OBJETIVO_RENDIMIENTO_HORA } from "./constants";
 
 export function generateEmailHTML(report: Report): string {
   const turnoShort = report.encabezado.turno.replace("TURNO ", "");
@@ -102,7 +102,19 @@ export function generateEmailHTML(report: Report): string {
     if (m3Has) {
       mRows.push(subHeader("Molino 3"));
       mRows.push(bigRow("Horas de marcha", m3.horasMarcha, "HS"));
-      mRows.push(bigRow("Rendimiento / hora", m3.rendimientoHora, "CM"));
+      if (hd(m3.rendimientoHora)) {
+        const rend = m3.rendimientoHora as number;
+        const rendColor = rend >= OBJETIVO_RENDIMIENTO_HORA ? "#16a34a" : "#dc2626";
+        mRows.push(bigRow("Rendimiento / hora", rend, "CM", rendColor));
+        mRows.push(
+          objectiveRow(
+            "Objetivo rendimiento",
+            OBJETIVO_RENDIMIENTO_HORA,
+            "CM",
+            rend >= OBJETIVO_RENDIMIENTO_HORA
+          )
+        );
+      }
       mRows.push(valRow("Cuerpos molienda", m3.cuerposMoliendaKG, "KG"));
       if (hd(m3.causaBajoRendimiento))
         mRows.push(txtRow("Causa bajo rendimiento", m3.causaBajoRendimiento));
@@ -127,13 +139,19 @@ export function generateEmailHTML(report: Report): string {
     const scRows: string[] = [];
     scRows.push(valRow("Hora de inicio", sc.horaInicio));
     if (hd(sc.moldesColados)) {
-      scRows.push(bigRow("Moldes colados", sc.moldesColados, "UN"));
       const moldes = sc.moldesColados as number;
-      if (moldes < OBJETIVO_MOLDES_COLADOS) {
+      const cumpleMoldes = moldes >= OBJETIVO_MOLDES_COLADOS;
+      const moldesColor = cumpleMoldes ? "#16a34a" : "#dc2626";
+      scRows.push(bigRow("Moldes colados", moldes, "UN", moldesColor));
+      scRows.push(
+        objectiveRow("Objetivo moldes", OBJETIVO_MOLDES_COLADOS, "UN", cumpleMoldes)
+      );
+      if (!cumpleMoldes) {
         scRows.push(
-          valRow(
+          desvioRow(
             "Desvío vs objetivo",
-            `${moldes - OBJETIVO_MOLDES_COLADOS} moldes (obj: ${OBJETIVO_MOLDES_COLADOS})`
+            moldes - OBJETIVO_MOLDES_COLADOS,
+            "moldes"
           )
         );
       }
@@ -229,21 +247,11 @@ export function generateEmailHTML(report: Report): string {
     desRows.push(ordenListRow("Fuera de medida", des.fueraMedida));
     if (des.ajustadas1era.activo) {
       const a = des.ajustadas1era;
-      desRows.push(
-        valRow(
-          "Ajustadas 1era",
-          `${a.signo} ${a.cantidad ?? ""} ${a.medida}`.trim()
-        )
-      );
+      desRows.push(ajustadasRow("Ajustadas 1era", a.signo, a.cantidad, a.medida));
     }
     if (des.ajustadasReproceso.activo) {
       const a = des.ajustadasReproceso;
-      desRows.push(
-        valRow(
-          "Ajustadas reproceso",
-          `${a.signo} ${a.cantidad ?? ""} ${a.medida}`.trim()
-        )
-      );
+      desRows.push(ajustadasRow("Ajustadas reproceso", a.signo, a.cantidad, a.medida));
     }
     desRows.push(txtRow("Demoras", des.demoras));
     desRows.push(txtRow("Mantenimiento", des.mantenimiento));
@@ -470,7 +478,8 @@ function valRow(
 function bigRow(
   label: string,
   value: unknown,
-  unit?: string
+  unit?: string,
+  color?: string
 ): string {
   if (!hd(value)) return "";
   const display =
@@ -478,9 +487,36 @@ function bigRow(
   const unitStr = unit
     ? `<span style="color:#94a3b8;font-size:12px;margin-left:3px;">${unit}</span>`
     : "";
+  const valueColor = color ?? "#0f172a";
   return `<tr>
     <td style="padding:8px 12px;font-size:13px;color:#64748b;border-bottom:1px solid #f1f5f9;width:45%;vertical-align:middle;">${esc(label)}</td>
-    <td style="padding:8px 12px;font-size:20px;color:#0f172a;border-bottom:1px solid #f1f5f9;font-weight:800;">${display}${unitStr}</td>
+    <td style="padding:8px 12px;font-size:20px;color:${valueColor};border-bottom:1px solid #f1f5f9;font-weight:800;">${display}${unitStr}</td>
+  </tr>`;
+}
+
+function objectiveRow(label: string, objetivo: number, unit: string, cumple: boolean): string {
+  const icon = cumple ? "✓" : "✗";
+  const color = cumple ? "#16a34a" : "#dc2626";
+  return `<tr>
+    <td style="padding:4px 12px;font-size:11px;color:#94a3b8;border-bottom:1px solid #f1f5f9;width:45%;">${esc(label)}</td>
+    <td style="padding:4px 12px;font-size:11px;color:${color};border-bottom:1px solid #f1f5f9;font-weight:600;">${icon} ${objetivo} <span style="color:#94a3b8;">${unit}</span></td>
+  </tr>`;
+}
+
+function desvioRow(label: string, desvio: number, unit: string): string {
+  const sign = desvio >= 0 ? "+" : "";
+  return `<tr>
+    <td style="padding:5px 12px;font-size:12px;color:#64748b;border-bottom:1px solid #f1f5f9;width:45%;">${esc(label)}</td>
+    <td style="padding:5px 12px;font-size:13px;color:#dc2626;border-bottom:1px solid #f1f5f9;font-weight:700;">${sign}${fmtNum(desvio)} <span style="color:#94a3b8;font-size:11px;">${esc(unit)}</span></td>
+  </tr>`;
+}
+
+function ajustadasRow(label: string, signo: string, cantidad: number | null, medida: string): string {
+  const qty = cantidad != null ? fmtNum(cantidad) : "—";
+  const sign = signo || "";
+  return `<tr>
+    <td style="padding:6px 12px;font-size:13px;color:#64748b;border-bottom:1px solid #f1f5f9;width:45%;vertical-align:top;">${esc(label)}</td>
+    <td style="padding:6px 12px;font-size:14px;color:#0f172a;border-bottom:1px solid #f1f5f9;font-weight:700;">${esc(sign)}${qty}<span style="font-size:11px;color:#64748b;font-weight:400;margin-left:4px;">${esc(medida)}</span></td>
   </tr>`;
 }
 
@@ -497,8 +533,11 @@ function ordenListRow(label: string, items: OrdenItem[]): string {
     .map((it) => it.valor)
     .filter((v): v is number => v !== null && v !== undefined);
   if (values.length === 0) return "";
-  const formatted = values.map((v) => `#${v}`).join(", ");
-  return valRow(label, formatted);
+  const formatted = values.map((v) => `<em>#${v}</em>`).join(", ");
+  return `<tr>
+    <td style="padding:6px 12px;font-size:13px;color:#64748b;border-bottom:1px solid #f1f5f9;width:45%;vertical-align:top;">${esc(label)}</td>
+    <td style="padding:6px 12px;font-size:13px;color:#0f172a;border-bottom:1px solid #f1f5f9;font-weight:500;">${formatted}</td>
+  </tr>`;
 }
 
 // ══════════════════════════════════════════

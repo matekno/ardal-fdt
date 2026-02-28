@@ -36,6 +36,7 @@ export const OPERARIOS = [
 ] as const;
 
 export const OBJETIVO_MOLDES_COLADOS = 19;
+export const OBJETIVO_RENDIMIENTO_HORA = 50; // CM/hora
 
 export const MOTIVOS_AUSENCIA = [
   "AI - AUSENCIA INJUSTIFICADA",

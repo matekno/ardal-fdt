@@ -76,6 +76,18 @@ const ajustadasDetalleSchema = z.object({
   signo: z.string(),    // "+" | "-" | ""
   cantidad: optNum,
   medida: z.string(),
+}).superRefine((data, ctx) => {
+  if (data.activo) {
+    if (!data.signo) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requerido", path: ["signo"] });
+    }
+    if (data.cantidad === null || data.cantidad === undefined) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requerido", path: ["cantidad"] });
+    }
+    if (!data.medida) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requerido", path: ["medida"] });
+    }
+  }
 });
 
 const autoelevadorItemSchema = z.object({
@@ -179,7 +191,14 @@ export const rotadorSchema = z.object({
 export const precuradoAutoclavesSchema = z.object({
   moldesPreCurado: reqNum.pipe(z.number().min(0).max(12)),
   moldesATC2: reqNum.pipe(z.number().min(0).max(12)),
-  moldesEnVias: optNum,
+  moldesEnVias: z.preprocess(
+    (val) => {
+      if (val === "" || val === null || val === undefined) return null;
+      const n = Number(val);
+      return isNaN(n) ? null : Math.round(n);
+    },
+    z.number().int().min(0).nullable()
+  ),
   demoras: z.string(),
   mantenimiento: z.string(),
   limpieza: z.string(),

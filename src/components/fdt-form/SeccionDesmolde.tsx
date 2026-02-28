@@ -15,12 +15,14 @@ export function SeccionDesmolde() {
           label="Moldes desmoldado en máquina"
           type="number"
           unit="UN"
+          required
         />
         <FormField
           name="desmolde.moldesManual"
           label="Moldes desmoldado manual"
           type="number"
           unit="UN"
+          required
         />
       </div>
       <OrdenList name="desmolde.dintelDesmoldado" label="Dintel desmoldado" />

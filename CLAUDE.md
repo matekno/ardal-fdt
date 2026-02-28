@@ -2,7 +2,12 @@
 
 ## Qué es
 App web interna de reporte de producción por turno para la fábrica de ladrillos HCCA Ardal/Retak.
-Los supervisores completan un formulario de 17 secciones y se genera un email HTML con el reporte.
+Los supervisores completan un formulario de 16 secciones y se genera un email HTML con el reporte.
+
+## Objetivo a corto / mediano plazo
+Que los supervisores de mantenimiento utilicen esta herramienta para el mail de fin de turno de producción.
+Que los interesados puedan tomar decisiones con 
+
 
 ## Stack
 - Next.js 16 (App Router, TypeScript)
@@ -65,3 +70,6 @@ AUTH_ALLOWED_EMAILS   # lista@ardal.com.ar,otra@ardal.com.ar
 - **Listas dinámicas**: componente DynamicList con useFieldArray
 - **Secciones vacías**: se omiten en el email (hasAnyField pattern)
 - **Resumen mantenimiento**: se compila automáticamente al generar email
+
+## Concepto clave
+Los supervisores solo registran novedades (lo que fue distinto de lo normal en el turno). La mayoría de las secciones suelen quedar vacías. El formulario debe optimizarse para registrar rápidamente solo las secciones con datos.

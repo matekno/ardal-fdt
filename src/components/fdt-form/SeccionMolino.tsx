@@ -19,18 +19,21 @@ export function SeccionMolino() {
           label="Horas de marcha"
           type="number"
           unit="HS"
+          required
         />
         <FormField
           name="molino3.rendimientoHora"
           label="Rendimiento / hora"
           type="number"
           unit="CM"
+          required
         />
         <FormField
           name="molino3.cuerposMoliendaKG"
           label="Cuerpos molienda"
           type="number"
           unit="KG"
+          required
         />
       </div>
 

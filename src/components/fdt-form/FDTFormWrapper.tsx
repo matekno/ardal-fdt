@@ -76,6 +76,7 @@ export function FDTFormWrapper() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(reportSchema) as any,
     defaultValues: createEmptyReport(),
+    mode: "onBlur",
   });
 
   const { watch, reset, formState: { errors } } = methods;
@@ -210,8 +211,8 @@ export function FDTFormWrapper() {
         <div className="flex items-center gap-3 shrink-0">
           {/* Progress counter */}
           <span className="text-xs font-mono tabular-nums text-zinc-500">
-            <span className="text-white">{filledCount}</span>
-            <span className="text-zinc-700">/{sectionKeys.length}</span>
+            <span className="text-white">{filledCount + (encabezadoFilled ? 1 : 0)}</span>
+            <span className="text-zinc-700">/{TABS.length}</span>
           </span>
 
           {/* Panel toggle (only in form view) */}

@@ -21,6 +21,7 @@ export function SeccionSalaControl() {
         name="salaControl.horaInicio"
         label="Hora de inicio"
         type="time"
+        required
       />
 
       {/* Moldes colados + badge objetivo */}
@@ -30,6 +31,7 @@ export function SeccionSalaControl() {
           label="Moldes colados"
           type="number"
           unit="UN"
+          required
         />
         <p className="text-[11px] text-zinc-400 font-mono">
           Objetivo: {OBJETIVO_MOLDES_COLADOS} UN
