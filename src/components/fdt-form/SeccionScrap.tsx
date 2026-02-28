@@ -18,6 +18,7 @@ export function SeccionScrap() {
           label="Scrap parcial (desmolde incompleto)"
           type="number"
           unit="%"
+          required
         />
         <FormField
           name="scrap.moldesPendientes"

@@ -7,7 +7,13 @@ import { reportSchema, createEmptyReport, compilarResumenMantenimiento, encabeza
 import type { Report } from "@/lib/schema";
 import { generateEmailHTML } from "@/lib/email-generator";
 import { TABS } from "@/lib/constants";
-import { ArrowLeft, ArrowRight, Envelope, Warning, Trash, ArrowUUpLeft } from "@phosphor-icons/react";
+import {
+  ArrowLeft, ArrowRight, Envelope, Warning, Trash, ArrowUUpLeft,
+  SquaresFour, ChatText, Users, Gear, Database, Sliders, Thermometer,
+  Scissors, ArrowsClockwise, FireSimple, Drop, Wrench, Shield, Stack,
+  Truck, Notepad, CheckCircle,
+  type Icon as PhosphorIcon,
+} from "@phosphor-icons/react";
 
 import { SeccionEncabezado } from "./SeccionEncabezado";
 import { SeccionGeneral } from "./SeccionGeneral";
@@ -28,10 +34,31 @@ import { SeccionAutoelevadores } from "./SeccionAutoelevadores";
 
 const DRAFT_KEY = "fdt-draft";
 
+type IconComponent = PhosphorIcon;
+
+const SECTION_ICONS: Record<string, IconComponent> = {
+  general: ChatText,
+  personal: Users,
+  molino3: Gear,
+  stockBarro: Database,
+  salaControl: Sliders,
+  maduracion: Thermometer,
+  corte: Scissors,
+  rotador: ArrowsClockwise,
+  precurado: FireSimple,
+  caldera: Drop,
+  desmolde: Wrench,
+  granallado: Shield,
+  scrap: Stack,
+  transformacion: SquaresFour,
+  autoelevadores: Truck,
+};
+
 function hasAnyData(obj: Record<string, unknown>): boolean {
   return Object.values(obj).some((v) => {
     if (Array.isArray(v)) return v.length > 0;
     if (v === null || v === undefined) return false;
+    if (typeof v === "boolean") return v === true;
     if (typeof v === "string") return v.trim() !== "";
     if (typeof v === "number") return true;
     if (typeof v === "object") return hasAnyData(v as Record<string, unknown>);
@@ -41,6 +68,7 @@ function hasAnyData(obj: Record<string, unknown>): boolean {
 
 export function FDTFormWrapper() {
   const [activeTab, setActiveTab] = useState("encabezado");
+  const [viewMode, setViewMode] = useState<"panel" | "form">("panel");
   const [previewHTML, setPreviewHTML] = useState<string | null>(null);
   const [clearConfirm, setClearConfirm] = useState(false);
 
@@ -48,6 +76,7 @@ export function FDTFormWrapper() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(reportSchema) as any,
     defaultValues: createEmptyReport(),
+    mode: "onBlur",
   });
 
   const { watch, reset, formState: { errors } } = methods;
@@ -65,7 +94,7 @@ export function FDTFormWrapper() {
     }
   }, [reset]);
 
-  // Auto-save to localStorage every 30s
+  // Auto-save to localStorage on every change
   useEffect(() => {
     const sub = watch((data) => {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
@@ -90,15 +119,14 @@ export function FDTFormWrapper() {
   const onPreview = () => {
     const raw = methods.getValues();
 
-    // Solo validar encabezado
     const enc = encabezadoSchema.safeParse(raw.encabezado);
     if (!enc.success) {
       setActiveTab("encabezado");
+      setViewMode("form");
       methods.trigger("encabezado");
       return;
     }
 
-    // Parsear con el schema completo (coerce números)
     const parsed = reportSchema.safeParse(raw);
     const data = parsed.success ? parsed.data : (raw as Report);
 
@@ -111,28 +139,28 @@ export function FDTFormWrapper() {
     localStorage.removeItem(DRAFT_KEY);
     reset(createEmptyReport());
     setClearConfirm(false);
+    setViewMode("panel");
   };
 
   // Calculate progress
   const formData = watch();
-  const sectionKeys = TABS.filter((t) => t.id !== "encabezado").map(
-    (t) => t.sectionKey
-  );
+  const sectionKeys = TABS.filter((t) => t.id !== "encabezado").map((t) => t.sectionKey);
   const filledCount = sectionKeys.filter((key) => {
     const section = (formData as Record<string, unknown>)[key];
     if (!section || typeof section !== "object") return false;
     return hasAnyData(section as Record<string, unknown>);
   }).length;
 
-  // Encabezado info for header display
+  // Encabezado info
   const enc = formData.encabezado as
     | { fecha?: string; turno?: string; supervisor?: string }
     | undefined;
+  const encabezadoFilled = !!(enc?.fecha && enc?.turno && enc?.supervisor);
 
+  // ─── Preview mode ────────────────────────────────────────────────────────────
   if (previewHTML) {
     return (
       <div className="min-h-[100dvh] bg-zinc-50 flex flex-col">
-        {/* Preview header */}
         <header className="bg-zinc-950 border-b border-zinc-800 px-4 md:px-6 py-3 sticky top-0 z-20">
           <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -162,69 +190,204 @@ export function FDTFormWrapper() {
     );
   }
 
+  // ─── Shared header (panel + form) ────────────────────────────────────────────
+  const sharedHeader = (
+    <header className="bg-zinc-950 border-b border-zinc-800 px-4 md:px-6 py-3 sticky top-0 z-20">
+      <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
+        {/* Brand + context */}
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="w-2 h-2 rounded-full bg-[#ea580c] shrink-0" />
+          <span className="text-white font-bold text-sm tracking-tight shrink-0">FDT</span>
+          {enc?.turno && (
+            <span className="text-zinc-500 text-xs truncate hidden sm:inline">
+              {enc.turno.replace("TURNO ", "")}
+              {enc.supervisor && ` — ${enc.supervisor.split(" - ")[0]}`}
+              {enc.fecha && ` · ${enc.fecha}`}
+            </span>
+          )}
+        </div>
+
+        {/* Right: actions */}
+        <div className="flex items-center gap-3 shrink-0">
+          {/* Progress counter */}
+          <span className="text-xs font-mono tabular-nums text-zinc-500">
+            <span className="text-white">{filledCount + (encabezadoFilled ? 1 : 0)}</span>
+            <span className="text-zinc-700">/{TABS.length}</span>
+          </span>
+
+          {/* Panel toggle (only in form view) */}
+          {viewMode === "form" && (
+            <button
+              type="button"
+              onClick={() => setViewMode("panel")}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-zinc-400 hover:text-white rounded border border-zinc-800 hover:border-zinc-600"
+              style={{ transition: "all 0.15s var(--ease-spring)" }}
+            >
+              <SquaresFour size={12} />
+              <span className="hidden sm:inline">Resumen</span>
+            </button>
+          )}
+
+          {/* Clear draft */}
+          {clearConfirm ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-zinc-500">¿Borrar todo?</span>
+              <button
+                type="button"
+                onClick={onClearDraft}
+                className="text-xs text-red-400 font-medium hover:text-red-300"
+                style={{ transition: "color 0.15s var(--ease-spring)" }}
+              >
+                Borrar
+              </button>
+              <button
+                type="button"
+                onClick={() => setClearConfirm(false)}
+                className="text-xs text-zinc-600 hover:text-zinc-400"
+                style={{ transition: "color 0.15s var(--ease-spring)" }}
+              >
+                Cancelar
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setClearConfirm(true)}
+              className="p-1.5 text-zinc-600 hover:text-red-400 rounded"
+              title="Limpiar borrador"
+              style={{ transition: "color 0.15s var(--ease-spring)" }}
+            >
+              <Trash size={14} />
+            </button>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+
+  // ─── Panel mode ──────────────────────────────────────────────────────────────
+  if (viewMode === "panel") {
+    const encTabDef = TABS.find((t) => t.id === "encabezado")!;
+    const sectionTabs = TABS.filter((t) => t.id !== "encabezado");
+
+    return (
+      <div className="min-h-[100dvh] flex flex-col bg-zinc-50">
+        {sharedHeader}
+
+        <div className="flex-1 max-w-5xl mx-auto w-full px-4 md:px-6 py-6 space-y-6">
+
+          {/* Encabezado tile — requerido */}
+          <div>
+            <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-[0.08em] mb-3">
+              Requerido
+            </p>
+            <button
+              onClick={() => { setActiveTab(encTabDef.id); setViewMode("form"); }}
+              className={`w-full flex items-center justify-between px-5 py-4 border rounded-md text-left ${
+                encabezadoFilled
+                  ? "border-emerald-200 bg-emerald-50/50 hover:border-emerald-300"
+                  : "border-[#ea580c]/40 bg-[#ea580c]/[0.03] hover:border-[#ea580c]/70"
+              } active:scale-[0.99]`}
+              style={{ transition: "all 0.15s var(--ease-spring)" }}
+            >
+              <div className="flex items-center gap-4">
+                <Notepad
+                  size={20}
+                  className={encabezadoFilled ? "text-emerald-500" : "text-[#ea580c]"}
+                />
+                <div>
+                  <p className="text-sm font-semibold text-zinc-800 leading-tight">
+                    Encabezado
+                  </p>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    {encabezadoFilled
+                      ? `${enc?.turno?.replace("TURNO ", "") ?? ""} — ${enc?.supervisor?.split(" - ")[0] ?? ""} · ${enc?.fecha ?? ""}`
+                      : "Fecha, turno y supervisor — completar primero"}
+                  </p>
+                </div>
+              </div>
+              {encabezadoFilled ? (
+                <CheckCircle size={18} className="text-emerald-500 shrink-0" weight="fill" />
+              ) : (
+                <ArrowRight size={16} className="text-[#ea580c] shrink-0" />
+              )}
+            </button>
+          </div>
+
+          {/* Section tiles grid */}
+          <div>
+            <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-[0.08em] mb-3">
+              Novedades
+              {filledCount > 0 && (
+                <span className="ml-2 text-zinc-600">
+                  {filledCount} de {sectionKeys.length} con datos
+                </span>
+              )}
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+              {sectionTabs.map((tab) => {
+                const Icon: IconComponent = SECTION_ICONS[tab.id] ?? Notepad;
+                const sectionData = (formData as Record<string, unknown>)[tab.sectionKey];
+                const hasFilled =
+                  !!sectionData &&
+                  typeof sectionData === "object" &&
+                  hasAnyData(sectionData as Record<string, unknown>);
+
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => { setActiveTab(tab.id); setViewMode("form"); }}
+                    className={`relative flex flex-col gap-3 p-4 border rounded-md text-left ${
+                      hasFilled
+                        ? "border-[#ea580c]/30 bg-[#ea580c]/[0.03] hover:border-[#ea580c]/50"
+                        : "border-zinc-200 bg-white hover:border-zinc-300"
+                    } active:scale-[0.97]`}
+                    style={{ transition: "all 0.15s var(--ease-spring)" }}
+                  >
+                    <div className="flex items-start justify-between">
+                      <Icon
+                        size={18}
+                        className={hasFilled ? "text-[#ea580c]" : "text-zinc-300"}
+                      />
+                      {hasFilled && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-0.5 shrink-0" />
+                      )}
+                    </div>
+                    <span className="text-[11px] font-semibold text-zinc-600 uppercase tracking-[0.08em] leading-tight">
+                      {tab.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Vista previa CTA */}
+          {encabezadoFilled && (
+            <div className="flex justify-end pt-2 border-t border-zinc-200">
+              <button
+                onClick={onPreview}
+                className="flex items-center gap-1.5 px-5 py-2.5 text-sm font-medium bg-[#ea580c] text-white rounded hover:bg-[#c2410c] active:scale-[0.98] active:translate-y-[1px]"
+                style={{ transition: "all 0.15s var(--ease-spring)" }}
+              >
+                <Envelope size={14} />
+                Vista previa del email
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Form / tabs mode ────────────────────────────────────────────────────────
   return (
     <FormProvider {...methods}>
       <form
         onSubmit={(e) => e.preventDefault()}
         className="min-h-[100dvh] flex flex-col bg-zinc-50"
       >
-        {/* Top header bar */}
-        <header className="bg-zinc-950 border-b border-zinc-800 px-4 md:px-6 py-3 sticky top-0 z-20">
-          <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
-            {/* Brand + context */}
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="w-2 h-2 rounded-full bg-[#ea580c] shrink-0" />
-              <span className="text-white font-bold text-sm tracking-tight shrink-0">FDT</span>
-              {enc?.turno && (
-                <span className="text-zinc-500 text-xs truncate hidden sm:inline">
-                  {enc.turno.replace("TURNO ", "")}
-                  {enc.supervisor && ` — ${enc.supervisor.split(" - ")[0]}`}
-                  {enc.fecha && ` · ${enc.fecha}`}
-                </span>
-              )}
-            </div>
-
-            {/* Right: progress + clear */}
-            <div className="flex items-center gap-4 shrink-0">
-              <span className="text-xs font-mono tabular-nums text-zinc-500">
-                <span className="text-white">{filledCount}</span>
-                <span className="text-zinc-700">/{sectionKeys.length}</span>
-              </span>
-
-              {clearConfirm ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-zinc-500">¿Borrar todo?</span>
-                  <button
-                    type="button"
-                    onClick={onClearDraft}
-                    className="text-xs text-red-400 font-medium hover:text-red-300"
-                    style={{ transition: "color 0.15s var(--ease-spring)" }}
-                  >
-                    Borrar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setClearConfirm(false)}
-                    className="text-xs text-zinc-600 hover:text-zinc-400"
-                    style={{ transition: "color 0.15s var(--ease-spring)" }}
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setClearConfirm(true)}
-                  className="p-1.5 text-zinc-600 hover:text-red-400 rounded"
-                  title="Limpiar borrador"
-                  style={{ transition: "color 0.15s var(--ease-spring)" }}
-                >
-                  <Trash size={14} />
-                </button>
-              )}
-            </div>
-          </div>
-        </header>
+        {sharedHeader}
 
         {/* Tab strip */}
         <div className="bg-white border-b border-zinc-200 sticky top-[49px] z-10">
@@ -232,9 +395,7 @@ export function FDTFormWrapper() {
             <div className="flex overflow-x-auto scrollbar-hide">
               {TABS.map((tab) => {
                 const isActive = activeTab === tab.id;
-                const sectionData = (formData as Record<string, unknown>)[
-                  tab.sectionKey
-                ];
+                const sectionData = (formData as Record<string, unknown>)[tab.sectionKey];
                 const hasFilled: boolean =
                   tab.id !== "encabezado" &&
                   !!sectionData &&
@@ -274,20 +435,32 @@ export function FDTFormWrapper() {
         {/* Content */}
         <div className="flex-1 max-w-5xl mx-auto w-full px-4 md:px-6 py-6">
           {/* Validation error */}
-          {Object.keys(errors).length > 0 && (
-            <div className="mb-5 flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
-              <Warning size={14} className="shrink-0 text-red-500" weight="bold" />
-              Hay errores de validación en Encabezado. Revisá los campos obligatorios.
-            </div>
-          )}
+          {Object.keys(errors).length > 0 && (() => {
+            const errorKeys = Object.keys(errors);
+            const sectionsWithErrors = TABS
+              .filter((t) => errorKeys.includes(t.sectionKey) || errorKeys.includes(t.id))
+              .map((t) => t.label);
+            return (
+              <div className="mb-5 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                <Warning size={14} className="shrink-0 text-red-500 mt-0.5" weight="bold" />
+                <span>
+                  Hay campos con errores.{" "}
+                  {sectionsWithErrors.length > 0 && (
+                    <span className="font-semibold">
+                      Revisá: {sectionsWithErrors.join(", ")}
+                    </span>
+                  )}
+                </span>
+              </div>
+            );
+          })()}
 
           {/* Active section */}
           <div>
             {activeTab === "encabezado" && <SeccionEncabezado />}
             {activeTab === "general" && <SeccionGeneral />}
             {activeTab === "personal" && <SeccionPersonal />}
-            {activeTab === "molino3" && <SeccionMolino molinoNumber={3} />}
-            {activeTab === "molino2" && <SeccionMolino molinoNumber={2} />}
+            {activeTab === "molino3" && <SeccionMolino />}
             {activeTab === "stockBarro" && <SeccionStockBarro />}
             {activeTab === "salaControl" && <SeccionSalaControl />}
             {activeTab === "maduracion" && <SeccionMaduracion />}

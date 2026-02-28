@@ -1,9 +1,9 @@
 /**
  * Generador de email HTML para reportes FDT
- * Port directo de poc-a/html-generator.js a TypeScript
  */
 
-import type { Report } from "./schema";
+import type { Report, OrdenItem } from "./schema";
+import { OBJETIVO_MOLDES_COLADOS, OBJETIVO_RENDIMIENTO_HORA } from "./constants";
 
 export function generateEmailHTML(report: Report): string {
   const turnoShort = report.encabezado.turno.replace("TURNO ", "");
@@ -44,16 +44,8 @@ export function generateEmailHTML(report: Report): string {
       pRows.push(valRow(c.personal, c.puesto));
     }
   }
-  if (p.cambiosHorario.length > 0) {
-    pRows.push(subHeader("Cambios de horario"));
-    for (const c of p.cambiosHorario) {
-      pRows.push(valRow("Ausente", c.ausente));
-      pRows.push(valRow("Presente", c.presente));
-      pRows.push(txtRow("Comentario", c.comentario));
-    }
-  }
   if (p.horasExtras.length > 0) {
-    pRows.push(subHeader("Horas extras"));
+    pRows.push(subHeader("Banco de Horas"));
     for (const h of p.horasExtras) {
       pRows.push(
         valRow(h.personal, `${h.desdeHora} → ${h.hastaHora}`)
@@ -94,62 +86,41 @@ export function generateEmailHTML(report: Report): string {
     sections.push(section("Personal", pRows, "#dc2626"));
   }
 
-  // ── Sección MOLINO ──
-  const m3 = report.molino3,
-    m2 = report.molino2,
-    sb = report.stockBarro;
+  // ── Sección MOLINO 3 + STOCK ──
+  const m3 = report.molino3;
+  const sb = report.stockBarro;
   const m3Has =
     hd(m3.horasMarcha) ||
     hd(m3.rendimientoHora) ||
     hd(m3.mantenimiento) ||
     hd(m3.aguaEnUso) ||
-    hd(m3.cuerposMoliendaUN);
-  const m2Has =
-    hd(m2.horasMarcha) ||
-    hd(m2.rendimientoHora) ||
-    hd(m2.mantenimiento) ||
-    hd(m2.aguaEnUso) ||
-    hd(m2.cuerposMoliendaUN);
+    hd(m3.cuerposMoliendaKG);
   const sbHas = hd(sb.arena) || hd(sb.recupero);
 
-  if (m3Has || m2Has || sbHas) {
+  if (m3Has || sbHas) {
     const mRows: string[] = [];
-    mRows.push(
-      valRow("Sistema dosificación A/Y", m3.sistemaDosificacion)
-    );
     if (m3Has) {
       mRows.push(subHeader("Molino 3"));
       mRows.push(bigRow("Horas de marcha", m3.horasMarcha, "HS"));
-      mRows.push(bigRow("Rendimiento / hora", m3.rendimientoHora, "CM"));
-      mRows.push(
-        valRow(
-          "Cuerpos molienda (baldes x 30kg)",
-          m3.cuerposMoliendaUN,
-          "UN"
-        )
-      );
-      if (m3.cuerposMoliendaUN !== null)
-        mRows.push(valRow("Cuerpos molienda", m3.cuerposMoliendaUN * 30, "KG"));
+      if (hd(m3.rendimientoHora)) {
+        const rend = m3.rendimientoHora as number;
+        const rendColor = rend >= OBJETIVO_RENDIMIENTO_HORA ? "#16a34a" : "#dc2626";
+        mRows.push(bigRow("Rendimiento / hora", rend, "CM", rendColor));
+        mRows.push(
+          objectiveRow(
+            "Objetivo rendimiento",
+            OBJETIVO_RENDIMIENTO_HORA,
+            "CM",
+            rend >= OBJETIVO_RENDIMIENTO_HORA
+          )
+        );
+      }
+      mRows.push(valRow("Cuerpos molienda", m3.cuerposMoliendaKG, "KG"));
+      if (hd(m3.causaBajoRendimiento))
+        mRows.push(txtRow("Causa bajo rendimiento", m3.causaBajoRendimiento));
       mRows.push(valRow("Agua en uso", m3.aguaEnUso));
       mRows.push(txtRow("Mantenimiento", m3.mantenimiento));
       mRows.push(txtRow("Limpieza", m3.limpieza));
-    }
-    if (m2Has) {
-      mRows.push(subHeader("Molino 2"));
-      mRows.push(bigRow("Horas de marcha", m2.horasMarcha, "HS"));
-      mRows.push(bigRow("Rendimiento / hora", m2.rendimientoHora, "CM"));
-      mRows.push(
-        valRow(
-          "Cuerpos molienda (baldes x 30kg)",
-          m2.cuerposMoliendaUN,
-          "UN"
-        )
-      );
-      if (m2.cuerposMoliendaUN !== null)
-        mRows.push(valRow("Cuerpos molienda", m2.cuerposMoliendaUN * 30, "KG"));
-      mRows.push(valRow("Agua en uso", m2.aguaEnUso));
-      mRows.push(txtRow("Mantenimiento", m2.mantenimiento));
-      mRows.push(txtRow("Limpieza", m2.limpieza));
     }
     if (sbHas) {
       mRows.push(subHeader("Stock de Barro"));
@@ -161,160 +132,166 @@ export function generateEmailHTML(report: Report): string {
     sections.push(section("Molino", mRows));
   }
 
-  // ── Secciones de planta (pattern genérico) ──
-  const plantSections: [
-    string,
-    Record<string, unknown>,
-    [string, string, string, string?][]
-  ][] = [
-    [
-      "Sala de Control",
-      report.salaControl,
-      [
-        ["Hora de inicio", "horaInicio", "val", "HS"],
-        ["Moldes colados", "moldesColados", "big", "UN"],
-        ["Dintel colado orden", "dintelColado", "val"],
-        ["Cambio de cemento orden", "cambioCemento", "val"],
-        ["Cambio de cal orden", "cambioCal", "val"],
-        ["Pruebas / Ensayos", "pruebasEnsayos", "txt"],
-        ["Demoras", "demoras", "txt"],
-        ["Mantenimiento", "mantenimiento", "txt"],
-        ["Limpieza", "limpieza", "txt"],
-        ["Otros", "otros", "txt"],
-      ],
-    ],
-    [
-      "Maduración",
-      report.maduracion,
-      [
-        ["Moldes en sala a fin de turno", "moldesEnSala", "big", "UN"],
-        ["Caloventores — Modo", "caloventoresModo", "val"],
-        ["Caloventores — Temperatura", "caloventoresTemp", "val", "°"],
-        ["Cambio de nylon orden", "cambioNylon", "val"],
-        ["Molde pinchado orden", "moldePinchado", "val"],
-        ["Molde fisurado orden", "moldeFisurado", "val"],
-        ["Demoras", "demoras", "txt"],
-        ["Mantenimiento", "mantenimiento", "txt"],
-        ["Limpieza", "limpieza", "txt"],
-        ["Comentarios", "comentarios", "txt"],
-      ],
-    ],
-    [
-      "Corte / Desmantelado",
-      report.corteDesmantelado,
-      [
-        ["Dintel cortado orden", "dintelCortado", "val"],
-        ["Molde fisurado orden", "moldeFisurado", "val"],
-        ["Demoras", "demoras", "txt"],
-        ["Mantenimiento", "mantenimiento", "txt"],
-        ["Limpieza", "limpieza", "txt"],
-        ["Comentarios", "comentarios", "txt"],
-      ],
-    ],
-    [
-      "Precurado / Autoclaves",
-      report.precuradoAutoclaves,
-      [
-        ["Moldes en sala de pre-curado", "moldesPreCurado", "big"],
-        ["Moldes en ATC 2", "moldesATC2", "big"],
-        ["Demoras", "demoras", "txt"],
-        ["Mantenimiento", "mantenimiento", "txt"],
-        ["Limpieza", "limpieza", "txt"],
-        ["Comentarios", "comentarios", "txt"],
-      ],
-    ],
-    [
-      "Caldera",
-      report.caldera,
-      [
-        ["Demoras", "demoras", "txt"],
-        ["Mantenimiento", "mantenimiento", "txt"],
-        ["Limpieza", "limpieza", "txt"],
-        ["Comentarios", "comentarios", "txt"],
-      ],
-    ],
-    [
-      "Desmolde",
-      report.desmolde,
-      [
-        ["Moldes desmoldado en máquina", "moldesMaquina", "big"],
-        ["Moldes desmoldado manual", "moldesManual", "big"],
-        ["Dintel desmoldado orden", "dintelDesmoldado", "val"],
-        ["Falla en aspiración orden", "fallaAspiracion", "val"],
-        ["Fuera de medida orden", "fueraMedida", "val"],
-        ["Unidades ajustadas de 1era", "ajustadas1era", "val"],
-        ["Unidades ajustadas reproceso", "ajustadasReproceso", "val"],
-        ["Demoras", "demoras", "txt"],
-        ["Mantenimiento", "mantenimiento", "txt"],
-        ["Limpieza", "limpieza", "txt"],
-        ["Comentarios", "comentarios", "txt"],
-      ],
-    ],
-    [
-      "Granallado",
-      report.granallado,
-      [
-        ["Planchas granalladas", "planchasGranalladas", "big"],
-        ["Demoras", "demoras", "txt"],
-        ["Mantenimiento", "mantenimiento", "txt"],
-        ["Limpieza", "limpieza", "txt"],
-        ["Comentarios", "comentarios", "txt"],
-      ],
-    ],
-  ];
-
-  for (const [title, data, fields] of plantSections) {
-    if (!hasAnyField(data)) continue;
-    const rows: string[] = [];
-    for (const [label, key, type, unit] of fields) {
-      const val = (data as Record<string, unknown>)[key];
-      if (type === "big") rows.push(bigRow(label, val, unit));
-      else if (type === "txt") rows.push(txtRow(label, val));
-      else rows.push(valRow(label, val, unit));
+  // ── SALA DE COLADO ──
+  const sc = report.salaControl;
+  const scHas = hasAnyField(sc as unknown as Record<string, unknown>);
+  if (scHas) {
+    const scRows: string[] = [];
+    scRows.push(valRow("Hora de inicio", sc.horaInicio));
+    if (hd(sc.moldesColados)) {
+      const moldes = sc.moldesColados as number;
+      const cumpleMoldes = moldes >= OBJETIVO_MOLDES_COLADOS;
+      const moldesColor = cumpleMoldes ? "#16a34a" : "#dc2626";
+      scRows.push(bigRow("Moldes colados", moldes, "UN", moldesColor));
+      scRows.push(
+        objectiveRow("Objetivo moldes", OBJETIVO_MOLDES_COLADOS, "UN", cumpleMoldes)
+      );
+      if (!cumpleMoldes) {
+        scRows.push(
+          desvioRow(
+            "Desvío vs objetivo",
+            moldes - OBJETIVO_MOLDES_COLADOS,
+            "moldes"
+          )
+        );
+      }
     }
-    sections.push(section(title, rows));
+    scRows.push(ordenListRow("Dintel colado", sc.dintelColado));
+    scRows.push(ordenListRow("Cambio de cemento", sc.cambioCemento));
+    scRows.push(ordenListRow("Cambio de cal", sc.cambioCal));
+    scRows.push(txtRow("Pruebas / Ensayos", sc.pruebasEnsayos));
+    scRows.push(txtRow("Demoras", sc.demoras));
+    scRows.push(txtRow("Mantenimiento", sc.mantenimiento));
+    scRows.push(txtRow("Limpieza", sc.limpieza));
+    scRows.push(txtRow("Otros", sc.otros));
+    sections.push(section("Sala de Colado", scRows));
   }
 
-  // ── Rotador ──
+  // ── MADURACIÓN ──
+  const mad = report.maduracion;
+  const madHas = hasAnyField(mad as unknown as Record<string, unknown>);
+  if (madHas) {
+    const madRows: string[] = [];
+    madRows.push(bigRow("Moldes en sala a fin de turno", mad.moldesEnSala, "UN"));
+    madRows.push(valRow("Caloventores — Modo", mad.caloventoresModo));
+    madRows.push(valRow("Caloventores — Temperatura", mad.caloventoresTemp, "°"));
+    madRows.push(ordenListRow("Cambio de nylon", mad.cambioNylon));
+    madRows.push(ordenListRow("Molde pinchado", mad.moldePinchado));
+    madRows.push(ordenListRow("Molde fisurado", mad.moldeFisurado));
+    madRows.push(txtRow("Demoras", mad.demoras));
+    madRows.push(txtRow("Mantenimiento", mad.mantenimiento));
+    madRows.push(txtRow("Limpieza", mad.limpieza));
+    madRows.push(txtRow("Comentarios", mad.comentarios));
+    sections.push(section("Maduración", madRows));
+  }
+
+  // ── CORTE / DESMANTELADO ──
+  const corte = report.corteDesmantelado;
+  const corteHas = hasAnyField(corte as unknown as Record<string, unknown>);
+  if (corteHas) {
+    const cRows: string[] = [];
+    cRows.push(ordenListRow("Dintel cortado", corte.dintelCortado));
+    cRows.push(ordenListRow("Molde fisurado", corte.moldeFisurado));
+    cRows.push(txtRow("Demoras", corte.demoras));
+    cRows.push(txtRow("Mantenimiento", corte.mantenimiento));
+    cRows.push(txtRow("Limpieza", corte.limpieza));
+    cRows.push(txtRow("Comentarios", corte.comentarios));
+    sections.push(section("Corte / Desmantelado", cRows));
+  }
+
+  // ── ROTADOR ──
   const rot = report.rotador;
-  if (hasAnyField(rot) || rot.columnasEncimado.length > 0) {
+  if (rot.arrastreNylon.length > 0 || rot.moldeFisurado.length > 0) {
     const rRows: string[] = [];
-    rRows.push(valRow("Arrastre de nylon orden", rot.arrastreNylon));
-    rRows.push(valRow("Molde fisurado orden", rot.moldeFisurado));
-    if (rot.columnasEncimado.length > 0) {
-      rRows.push(subHeader("Columnas de encimado"));
-      rot.columnasEncimado.forEach((c, i) => {
-        rRows.push(valRow(`Col. ${i + 1} — Número`, c.numero));
-        rRows.push(valRow(`Col. ${i + 1} — Defecto`, c.defecto));
-      });
-    }
-    rRows.push(txtRow("Demoras", rot.demoras));
-    rRows.push(txtRow("Mantenimiento", rot.mantenimiento));
-    rRows.push(txtRow("Limpieza", rot.limpieza));
-    rRows.push(txtRow("Comentarios", rot.comentarios));
+    rRows.push(ordenListRow("Arrastre de nylon", rot.arrastreNylon));
+    rRows.push(ordenListRow("Molde fisurado", rot.moldeFisurado));
     sections.push(section("Rotador", rRows));
   }
 
+  // ── PRECURADO / AUTOCLAVES ──
+  const pre = report.precuradoAutoclaves;
+  const preHas = hasAnyField(pre as unknown as Record<string, unknown>);
+  if (preHas) {
+    const preRows: string[] = [];
+    preRows.push(bigRow("Moldes en sala de pre-curado", pre.moldesPreCurado));
+    preRows.push(bigRow("Moldes en ATC 2", pre.moldesATC2));
+    if (hd(pre.moldesEnVias))
+      preRows.push(valRow("Moldes en vías", pre.moldesEnVias, "UN"));
+    preRows.push(txtRow("Demoras", pre.demoras));
+    preRows.push(txtRow("Mantenimiento", pre.mantenimiento));
+    preRows.push(txtRow("Limpieza", pre.limpieza));
+    preRows.push(txtRow("Comentarios", pre.comentarios));
+    sections.push(section("Precurado / Autoclaves", preRows));
+  }
+
+  // ── CALDERA ──
+  const cal = report.caldera;
+  if (hasAnyField(cal as unknown as Record<string, unknown>)) {
+    const calRows: string[] = [];
+    calRows.push(txtRow("Demoras", cal.demoras));
+    calRows.push(txtRow("Mantenimiento", cal.mantenimiento));
+    calRows.push(txtRow("Limpieza", cal.limpieza));
+    calRows.push(txtRow("Comentarios", cal.comentarios));
+    sections.push(section("Caldera", calRows));
+  }
+
+  // ── DESMOLDE ──
+  const des = report.desmolde;
+  const desHas = hasAnyField(des as unknown as Record<string, unknown>);
+  if (desHas) {
+    const desRows: string[] = [];
+    desRows.push(bigRow("Moldes desmoldado en máquina", des.moldesMaquina));
+    desRows.push(bigRow("Moldes desmoldado manual", des.moldesManual));
+    desRows.push(ordenListRow("Dintel desmoldado", des.dintelDesmoldado));
+    desRows.push(ordenListRow("Falla en aspiración", des.fallaAspiracion));
+    desRows.push(ordenListRow("Fuera de medida", des.fueraMedida));
+    if (des.ajustadas1era.activo) {
+      const a = des.ajustadas1era;
+      desRows.push(ajustadasRow("Ajustadas 1era", a.signo, a.cantidad, a.medida));
+    }
+    if (des.ajustadasReproceso.activo) {
+      const a = des.ajustadasReproceso;
+      desRows.push(ajustadasRow("Ajustadas reproceso", a.signo, a.cantidad, a.medida));
+    }
+    desRows.push(txtRow("Demoras", des.demoras));
+    desRows.push(txtRow("Mantenimiento", des.mantenimiento));
+    desRows.push(txtRow("Limpieza", des.limpieza));
+    desRows.push(txtRow("Comentarios", des.comentarios));
+    sections.push(section("Desmolde", desRows));
+  }
+
+  // ── GRANALLADO ──
+  const gran = report.granallado;
+  if (hasAnyField(gran as unknown as Record<string, unknown>)) {
+    const granRows: string[] = [];
+    granRows.push(bigRow("Planchas granalladas", gran.planchasGranalladas));
+    granRows.push(txtRow("Demoras", gran.demoras));
+    granRows.push(txtRow("Mantenimiento", gran.mantenimiento));
+    granRows.push(txtRow("Limpieza", gran.limpieza));
+    granRows.push(txtRow("Comentarios", gran.comentarios));
+    sections.push(section("Granallado", granRows));
+  }
+
   // ── SCRAP ──
-  const sc = report.scrap;
-  if (hd(sc.cerradoPct) || hd(sc.parcialPct) || hd(sc.moldesPendientes)) {
+  const scrap = report.scrap;
+  if (hd(scrap.cerradoPct) || hd(scrap.parcialPct) || hd(scrap.moldesPendientes)) {
     const sRows: string[] = [];
-    if (hd(sc.cerradoPct))
+    if (hd(scrap.cerradoPct))
       sRows.push(
         bigRow(
           "Scrap cerrado (desmolde completo)",
-          fmtPct(sc.cerradoPct)
+          fmtPct(scrap.cerradoPct)
         )
       );
-    if (hd(sc.parcialPct))
+    if (hd(scrap.parcialPct))
       sRows.push(
         bigRow(
           "Scrap parcial (desmolde incompleto)",
-          fmtPct(sc.parcialPct)
+          fmtPct(scrap.parcialPct)
         )
       );
     sRows.push(
-      bigRow("Moldes pendientes a desmoldar", sc.moldesPendientes, "moldes")
+      bigRow("Moldes pendientes a desmoldar", scrap.moldesPendientes, "moldes")
     );
     sections.push(section("Scrap", sRows, "#dc2626"));
   }
@@ -334,9 +311,10 @@ export function generateEmailHTML(report: Report): string {
     hd(tr.comentarios);
 
   if (
-    trHasAny(tr.x15) ||
-    trHasAny(tr.x175) ||
-    trHasAny(tr.x20) ||
+    trHasAny(tr.x15 as unknown as Record<string, unknown>) ||
+    trHasAny(tr.x175 as unknown as Record<string, unknown>) ||
+    trHasAny(tr.x20 as unknown as Record<string, unknown>) ||
+    trHasAny(tr.x25 as unknown as Record<string, unknown>) ||
     trGeneral
   ) {
     const tRows: string[] = [];
@@ -352,12 +330,12 @@ export function generateEmailHTML(report: Report): string {
       tRows.push(valRow('Cortados "45"', t.cortados45, "UN"));
       tRows.push(valRow('Para "VE"', t.ve, "UN"));
       tRows.push(valRow('Para "Descarte"', t.descarte, "UN"));
-      if (hd(t.descartePct))
-        tRows.push(valRow("% Descarte", fmtPct(t.descartePct as number)));
+      tRows.push(valRow("O Exportación", t.palletsOExport, "PLL"));
     };
-    renderSize("15", tr.x15);
-    renderSize("17,5", tr.x175);
-    renderSize("20", tr.x20);
+    renderSize("15", tr.x15 as unknown as Record<string, unknown>);
+    renderSize("17,5", tr.x175 as unknown as Record<string, unknown>);
+    renderSize("20", tr.x20 as unknown as Record<string, unknown>);
+    renderSize("25", tr.x25 as unknown as Record<string, unknown>);
     tRows.push(txtRow("Demoras", tr.demoras));
     tRows.push(txtRow("Mantenimiento", tr.mantenimiento));
     tRows.push(txtRow("Limpieza", tr.limpieza));
@@ -366,12 +344,17 @@ export function generateEmailHTML(report: Report): string {
   }
 
   // ── AUTOELEVADORES ──
-  if (hd(report.autoelevadores.comentarios)) {
-    sections.push(
-      section("Autoelevadores", [
-        txtRow("Comentarios", report.autoelevadores.comentarios),
-      ])
-    );
+  if (report.autoelevadores.lista.length > 0) {
+    const autoRows: string[] = [];
+    autoRows.push(subHeader("Operadores"));
+    for (const item of report.autoelevadores.lista) {
+      if (hd(item.operador)) {
+        autoRows.push(
+          valRow(item.operador, `${item.desdeHora} → ${item.hastaHora}`)
+        );
+      }
+    }
+    sections.push(section("Autoelevadores", autoRows));
   }
 
   // ── RESUMEN MANTENIMIENTO ──
@@ -495,7 +478,8 @@ function valRow(
 function bigRow(
   label: string,
   value: unknown,
-  unit?: string
+  unit?: string,
+  color?: string
 ): string {
   if (!hd(value)) return "";
   const display =
@@ -503,9 +487,36 @@ function bigRow(
   const unitStr = unit
     ? `<span style="color:#94a3b8;font-size:12px;margin-left:3px;">${unit}</span>`
     : "";
+  const valueColor = color ?? "#0f172a";
   return `<tr>
     <td style="padding:8px 12px;font-size:13px;color:#64748b;border-bottom:1px solid #f1f5f9;width:45%;vertical-align:middle;">${esc(label)}</td>
-    <td style="padding:8px 12px;font-size:20px;color:#0f172a;border-bottom:1px solid #f1f5f9;font-weight:800;">${display}${unitStr}</td>
+    <td style="padding:8px 12px;font-size:20px;color:${valueColor};border-bottom:1px solid #f1f5f9;font-weight:800;">${display}${unitStr}</td>
+  </tr>`;
+}
+
+function objectiveRow(label: string, objetivo: number, unit: string, cumple: boolean): string {
+  const icon = cumple ? "✓" : "✗";
+  const color = cumple ? "#16a34a" : "#dc2626";
+  return `<tr>
+    <td style="padding:4px 12px;font-size:11px;color:#94a3b8;border-bottom:1px solid #f1f5f9;width:45%;">${esc(label)}</td>
+    <td style="padding:4px 12px;font-size:11px;color:${color};border-bottom:1px solid #f1f5f9;font-weight:600;">${icon} ${objetivo} <span style="color:#94a3b8;">${unit}</span></td>
+  </tr>`;
+}
+
+function desvioRow(label: string, desvio: number, unit: string): string {
+  const sign = desvio >= 0 ? "+" : "";
+  return `<tr>
+    <td style="padding:5px 12px;font-size:12px;color:#64748b;border-bottom:1px solid #f1f5f9;width:45%;">${esc(label)}</td>
+    <td style="padding:5px 12px;font-size:13px;color:#dc2626;border-bottom:1px solid #f1f5f9;font-weight:700;">${sign}${fmtNum(desvio)} <span style="color:#94a3b8;font-size:11px;">${esc(unit)}</span></td>
+  </tr>`;
+}
+
+function ajustadasRow(label: string, signo: string, cantidad: number | null, medida: string): string {
+  const qty = cantidad != null ? fmtNum(cantidad) : "—";
+  const sign = signo || "";
+  return `<tr>
+    <td style="padding:6px 12px;font-size:13px;color:#64748b;border-bottom:1px solid #f1f5f9;width:45%;vertical-align:top;">${esc(label)}</td>
+    <td style="padding:6px 12px;font-size:14px;color:#0f172a;border-bottom:1px solid #f1f5f9;font-weight:700;">${esc(sign)}${qty}<span style="font-size:11px;color:#64748b;font-weight:400;margin-left:4px;">${esc(medida)}</span></td>
   </tr>`;
 }
 
@@ -517,6 +528,18 @@ function txtRow(label: string, value: unknown): string {
   </tr>`;
 }
 
+function ordenListRow(label: string, items: OrdenItem[]): string {
+  const values = items
+    .map((it) => it.valor)
+    .filter((v): v is number => v !== null && v !== undefined);
+  if (values.length === 0) return "";
+  const formatted = values.map((v) => `<em>#${v}</em>`).join(", ");
+  return `<tr>
+    <td style="padding:6px 12px;font-size:13px;color:#64748b;border-bottom:1px solid #f1f5f9;width:45%;vertical-align:top;">${esc(label)}</td>
+    <td style="padding:6px 12px;font-size:13px;color:#0f172a;border-bottom:1px solid #f1f5f9;font-weight:500;">${formatted}</td>
+  </tr>`;
+}
+
 // ══════════════════════════════════════════
 // UTILITIES
 // ══════════════════════════════════════════
@@ -525,14 +548,17 @@ function hd(val: unknown): boolean {
   if (val === null || val === undefined) return false;
   if (typeof val === "string") return val.trim() !== "";
   if (typeof val === "number") return true;
-  if (typeof val === "boolean") return val === true; // solo incluir si es true (novedad)
+  if (typeof val === "boolean") return val === true;
   return false;
 }
 
 function hasAnyField(obj: Record<string, unknown>): boolean {
-  return Object.values(obj).some((v) =>
-    Array.isArray(v) ? v.length > 0 : hd(v)
-  );
+  return Object.values(obj).some((v) => {
+    if (Array.isArray(v)) return v.length > 0;
+    if (v !== null && v !== undefined && typeof v === "object")
+      return hasAnyField(v as Record<string, unknown>);
+    return hd(v);
+  });
 }
 
 function fmtNum(n: number | null | undefined): string {

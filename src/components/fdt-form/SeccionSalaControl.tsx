@@ -1,19 +1,63 @@
 "use client";
 
+import { useWatch } from "react-hook-form";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { FormField } from "@/components/ui/FormField";
 import { TextAreaField } from "@/components/ui/TextAreaField";
+import { OrdenList } from "@/components/ui/OrdenList";
+import { OBJETIVO_MOLDES_COLADOS } from "@/lib/constants";
 
 export function SeccionSalaControl() {
+  const moldesRaw = useWatch({ name: "salaControl.moldesColados" });
+  const moldesNum = moldesRaw !== "" && moldesRaw !== null && moldesRaw !== undefined
+    ? Number(moldesRaw)
+    : null;
+  const desvio = moldesNum !== null && !isNaN(moldesNum)
+    ? moldesNum - OBJETIVO_MOLDES_COLADOS
+    : null;
+
   return (
-    <SectionCard title="Sala de Control">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField name="salaControl.horaInicio" label="Hora de inicio" unit="HS" />
-        <FormField name="salaControl.moldesColados" label="Moldes colados" type="number" unit="UN" />
-        <FormField name="salaControl.dintelColado" label="Dintel colado orden" />
-        <FormField name="salaControl.cambioCemento" label="Cambio de cemento orden" />
-        <FormField name="salaControl.cambioCal" label="Cambio de cal orden" />
+    <SectionCard title="Sala de Colado">
+      <FormField
+        name="salaControl.horaInicio"
+        label="Hora de inicio"
+        type="time"
+        required
+      />
+
+      {/* Moldes colados + badge objetivo */}
+      <div className="space-y-1.5">
+        <FormField
+          name="salaControl.moldesColados"
+          label="Moldes colados"
+          type="number"
+          unit="UN"
+          required
+        />
+        <p className="text-[11px] text-zinc-400 font-mono">
+          Objetivo: {OBJETIVO_MOLDES_COLADOS} UN
+          {desvio !== null && (
+            <span
+              className={`ml-2 font-semibold ${
+                desvio >= 0 ? "text-emerald-600" : "text-red-600"
+              }`}
+            >
+              {desvio >= 0
+                ? `+${desvio} vs objetivo`
+                : `${desvio} vs objetivo`}
+            </span>
+          )}
+        </p>
       </div>
+
+      <OrdenList
+        name="salaControl.dintelColado"
+        label="Dintel colado"
+        maxItems={2}
+      />
+      <OrdenList name="salaControl.cambioCemento" label="Cambio de cemento" />
+      <OrdenList name="salaControl.cambioCal" label="Cambio de cal" />
+
       <TextAreaField name="salaControl.pruebasEnsayos" label="Pruebas / Ensayos" />
       <TextAreaField name="salaControl.demoras" label="Demoras" />
       <TextAreaField name="salaControl.mantenimiento" label="Mantenimiento" />
