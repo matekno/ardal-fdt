@@ -229,34 +229,68 @@ export function HistorialView({ reports, total, page, limit, filters }: Props) {
             <div className="overflow-x-auto">
               <table className="text-xs w-full border-collapse">
                 <thead>
+                  {/* Section group header row */}
+                  <tr className="border-b border-zinc-200">
+                    <th colSpan={3} className="text-left px-3 py-1 text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.1em] bg-zinc-100 border-r border-zinc-200 whitespace-nowrap">
+                      Encabezado
+                    </th>
+                    <th className="text-center px-3 py-1 text-[10px] font-semibold text-blue-600 uppercase tracking-[0.1em] bg-blue-100 whitespace-nowrap border-l border-blue-200">
+                      Sala de Colado
+                    </th>
+                    <th colSpan={3} className="text-center px-3 py-1 text-[10px] font-semibold text-orange-600 uppercase tracking-[0.1em] bg-orange-100 whitespace-nowrap border-l border-orange-200">
+                      Molino 3
+                    </th>
+                    <th colSpan={2} className="text-center px-3 py-1 text-[10px] font-semibold text-emerald-700 uppercase tracking-[0.1em] bg-emerald-100 whitespace-nowrap border-l border-emerald-200">
+                      Stock Barro
+                    </th>
+                    <th colSpan={2} className="text-center px-3 py-1 text-[10px] font-semibold text-yellow-700 uppercase tracking-[0.1em] bg-yellow-100 whitespace-nowrap border-l border-yellow-200">
+                      Maduración
+                    </th>
+                    <th colSpan={2} className="text-center px-3 py-1 text-[10px] font-semibold text-purple-700 uppercase tracking-[0.1em] bg-purple-100 whitespace-nowrap border-l border-purple-200">
+                      Precurado
+                    </th>
+                    <th colSpan={2} className="text-center px-3 py-1 text-[10px] font-semibold text-zinc-600 uppercase tracking-[0.1em] bg-zinc-200 whitespace-nowrap border-l border-zinc-300">
+                      Desmolde
+                    </th>
+                    <th className="text-center px-3 py-1 text-[10px] font-semibold text-red-600 uppercase tracking-[0.1em] bg-red-100 whitespace-nowrap border-l border-red-200">
+                      Scrap
+                    </th>
+                    <th className="text-center px-3 py-1 text-[10px] font-semibold text-indigo-600 uppercase tracking-[0.1em] bg-indigo-100 whitespace-nowrap border-l border-indigo-200">
+                      Transform.
+                    </th>
+                    <th colSpan={2} className="text-center px-3 py-1 text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.1em] bg-zinc-100 whitespace-nowrap border-l border-zinc-200">
+                      Personal
+                    </th>
+                  </tr>
+                  {/* Column headers */}
                   <tr className="bg-zinc-50 border-b border-zinc-200">
                     <th className="sticky left-0 z-10 bg-zinc-50 text-left px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap border-r border-zinc-200 min-w-[90px]">Fecha</th>
                     <th className="sticky left-[90px] z-10 bg-zinc-50 text-left px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap border-r border-zinc-200 min-w-[72px]">Turno</th>
                     <th className="text-left px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap border-r border-zinc-100 min-w-[120px]">Supervisor</th>
                     {/* Sala de Colado */}
-                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap border-l border-zinc-100 bg-blue-50/40" title="Moldes colados (objetivo: 19)">Colados</th>
+                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap border-l border-blue-200 bg-blue-50" title="Moldes colados (objetivo: 19)">Colados</th>
                     {/* Molino */}
-                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-orange-50/40" title="Rendimiento horario molino (objetivo: 50 CM/h)">Rend/h</th>
-                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-orange-50/40" title="Horas de marcha molino">Hs marcha</th>
-                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-orange-50/40" title="Cuerpos de molienda KG">Cuerpos kg</th>
+                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap border-l border-orange-200 bg-orange-50" title="Rendimiento horario molino (objetivo: 50 CM/h)">Rend/h</th>
+                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-orange-50" title="Horas de marcha molino">Hs marcha</th>
+                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-orange-50" title="Cuerpos de molienda KG">Cuerpos kg</th>
                     {/* Stock */}
-                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-emerald-50/40" title="Stock arena MT">Arena MT</th>
-                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-emerald-50/40" title="Stock recupero MT">Recup. MT</th>
+                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap border-l border-emerald-200 bg-emerald-50" title="Stock arena MT">Arena MT</th>
+                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-emerald-50" title="Stock recupero MT">Recup. MT</th>
                     {/* Maduración */}
-                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-yellow-50/40" title="Moldes en sala de maduración">En sala</th>
-                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-yellow-50/40" title="Temperatura caloventores °C">Temp °C</th>
+                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap border-l border-yellow-200 bg-yellow-50" title="Moldes en sala de maduración">En sala</th>
+                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-yellow-50" title="Temperatura caloventores °C">Temp °C</th>
                     {/* Precurado */}
-                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-purple-50/40" title="Moldes en precurado">Precurado</th>
-                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-purple-50/40" title="Moldes en ATC2">ATC2</th>
+                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap border-l border-purple-200 bg-purple-50" title="Moldes en precurado">Precurado</th>
+                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-purple-50" title="Moldes en ATC2">ATC2</th>
                     {/* Desmolde */}
-                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-zinc-100/60" title="Desmolde máquina">Desmolde máq</th>
-                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-zinc-100/60" title="Desmolde manual">Desmolde man</th>
+                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap border-l border-zinc-300 bg-zinc-100" title="Desmolde máquina">Desmolde máq</th>
+                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-zinc-100" title="Desmolde manual">Desmolde man</th>
                     {/* Scrap */}
-                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-red-50/40" title="Scrap parcial %">Scrap %</th>
+                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap border-l border-red-200 bg-red-50" title="Scrap parcial %">Scrap %</th>
                     {/* Transformación */}
-                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap bg-indigo-50/40" title="Total pallets transformación">Pallets</th>
+                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap border-l border-indigo-200 bg-indigo-50" title="Total pallets transformación">Pallets</th>
                     {/* Personal */}
-                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap" title="Cantidad de ausentes">Ausentes</th>
+                    <th className="text-right px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap border-l border-zinc-200" title="Cantidad de ausentes">Ausentes</th>
                     <th className="text-center px-3 py-2 font-semibold text-zinc-500 uppercase tracking-[0.08em] whitespace-nowrap" title="Incidentes / Accidentes">Inc/Acc</th>
                   </tr>
                 </thead>
