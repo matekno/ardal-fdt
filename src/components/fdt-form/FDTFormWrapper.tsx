@@ -11,7 +11,7 @@ import {
   ArrowLeft, ArrowRight, Envelope, Warning, Trash, ArrowUUpLeft,
   SquaresFour, ChatText, Users, Gear, Database, Sliders, Thermometer,
   Scissors, ArrowsClockwise, FireSimple, Drop, Wrench, Shield, Stack,
-  Truck, Notepad, CheckCircle,
+  Truck, Notepad, CheckCircle, ClockCounterClockwise, SpinnerGap,
   type Icon as PhosphorIcon,
 } from "@phosphor-icons/react";
 
@@ -71,6 +71,7 @@ export function FDTFormWrapper() {
   const [viewMode, setViewMode] = useState<"panel" | "form">("panel");
   const [previewHTML, setPreviewHTML] = useState<string | null>(null);
   const [clearConfirm, setClearConfirm] = useState(false);
+  const [savedStatus, setSavedStatus] = useState<"idle" | "saving" | "saved" | "error" | "incomplete">("idle");
 
   const methods = useForm<Report>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -133,6 +134,21 @@ export function FDTFormWrapper() {
     data.resumenMantenimiento = compilarResumenMantenimiento(data);
     const html = generateEmailHTML(data);
     setPreviewHTML(html);
+
+    // Solo guardar en DB si el schema completo es válido
+    if (!parsed.success) {
+      setSavedStatus("incomplete");
+      return;
+    }
+
+    setSavedStatus("saving");
+    fetch("/api/reports", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(parsed.data),
+    })
+      .then((res) => setSavedStatus(res.ok ? "saved" : "error"))
+      .catch(() => setSavedStatus("error"));
   };
 
   const onClearDraft = () => {
@@ -170,14 +186,40 @@ export function FDTFormWrapper() {
                 Vista previa del email
               </span>
             </div>
-            <button
-              onClick={() => setPreviewHTML(null)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-white rounded border border-zinc-700 hover:border-zinc-500"
-              style={{ transition: "all 0.15s var(--ease-spring)" }}
-            >
-              <ArrowUUpLeft size={12} />
-              Volver al formulario
-            </button>
+            <div className="flex items-center gap-3">
+              {savedStatus === "saving" && (
+                <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+                  <SpinnerGap size={12} className="animate-spin" />
+                  Guardando…
+                </span>
+              )}
+              {savedStatus === "saved" && (
+                <span className="flex items-center gap-1.5 text-xs text-emerald-400">
+                  <CheckCircle size={12} weight="fill" />
+                  Guardado
+                </span>
+              )}
+              {savedStatus === "incomplete" && (
+                <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+                  <Warning size={12} weight="fill" />
+                  Faltan campos obligatorios
+                </span>
+              )}
+              {savedStatus === "error" && (
+                <span className="flex items-center gap-1.5 text-xs text-red-400">
+                  <Warning size={12} weight="fill" />
+                  Error al guardar
+                </span>
+              )}
+              <button
+                onClick={() => { setPreviewHTML(null); setSavedStatus("idle"); }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-white rounded border border-zinc-700 hover:border-zinc-500"
+                style={{ transition: "all 0.15s var(--ease-spring)" }}
+              >
+                <ArrowUUpLeft size={12} />
+                Volver al formulario
+              </button>
+            </div>
           </div>
         </header>
         <div className="flex-1 max-w-5xl mx-auto w-full px-4 md:px-6 py-6">
@@ -227,6 +269,16 @@ export function FDTFormWrapper() {
               <span className="hidden sm:inline">Resumen</span>
             </button>
           )}
+
+          {/* Historial */}
+          <a
+            href="/historial"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-zinc-400 hover:text-white rounded border border-zinc-800 hover:border-zinc-600"
+            style={{ transition: "all 0.15s var(--ease-spring)" }}
+          >
+            <ClockCounterClockwise size={12} />
+            <span className="hidden sm:inline">Historial</span>
+          </a>
 
           {/* Clear draft */}
           {clearConfirm ? (

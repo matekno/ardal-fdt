@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Encabezado
+  fecha      String
+  turno      String
+  supervisor String
+  userEmail  String
+
+  // Email tracking (futuro)
+  emailSent   Boolean   @default(false)
+  emailSentAt DateTime?
+
+  // Métricas clave — campos obligatorios del formulario (reqNum en Zod)
+  molino3HorasMarcha         Float
+  molino3RendimientoHora     Float
+  molino3CuerposMoliendaKG   Float
+  stockBarroArena            Float
+  stockBarroRecupero         Float
+  salaControlMoldesColados   Int
+  maduracionMoldesEnSala     Int
+  maduracionCaloventoresTemp Float
+  precuradoMoldesPreCurado   Int
+  precuradoMoldesATC2        Int
+  desmoldeMoldesMaquina      Int
+  desmoldeMoldesManual       Int
+  scrapParcialPct            Float
+
+  // Derivados para gráficos
+  transformacionTotalPallets Int?
+  cantidadAusentes           Int?
+  tieneIncidentes            Boolean @default(false)
+  tieneAccidentes            Boolean @default(false)
+
+  // Reporte completo (JSONB)
+  data Json
+
+  @@unique([fecha, turno])
+  @@index([fecha])
+  @@index([turno])
+  @@index([supervisor])
+  @@index([userEmail])
+}
