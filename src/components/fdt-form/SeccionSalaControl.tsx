@@ -5,15 +5,16 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { FormField } from "@/components/ui/FormField";
 import { TextAreaField } from "@/components/ui/TextAreaField";
 import { OrdenList } from "@/components/ui/OrdenList";
-import { OBJETIVO_MOLDES_COLADOS } from "@/lib/constants";
+import { useSettings } from "@/contexts/SettingsContext";
 
 export function SeccionSalaControl() {
+  const { objetivoMoldesColados } = useSettings();
   const moldesRaw = useWatch({ name: "salaControl.moldesColados" });
   const moldesNum = moldesRaw !== "" && moldesRaw !== null && moldesRaw !== undefined
     ? Number(moldesRaw)
     : null;
   const desvio = moldesNum !== null && !isNaN(moldesNum)
-    ? moldesNum - OBJETIVO_MOLDES_COLADOS
+    ? moldesNum - objetivoMoldesColados
     : null;
 
   return (
@@ -35,7 +36,7 @@ export function SeccionSalaControl() {
           required
         />
         <p className="text-[11px] text-zinc-400 font-mono">
-          Objetivo: {OBJETIVO_MOLDES_COLADOS} UN
+          Objetivo: {objetivoMoldesColados} UN
           {desvio !== null && (
             <span
               className={`ml-2 font-semibold ${

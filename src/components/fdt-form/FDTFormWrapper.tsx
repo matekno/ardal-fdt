@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useForm, FormProvider, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   reportSchema,
@@ -15,7 +15,7 @@ import { TABS } from "@/lib/constants";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import type { AppSettings } from "@/lib/settings";
 import {
-  REQUIRED_FIELDS_MAP,
+  getRequiredFieldsMap,
   getNestedValue,
   isFieldFilled,
 } from "@/lib/required-fields";
@@ -122,6 +122,24 @@ function hasAnyData(obj: Record<string, unknown>): boolean {
 
 function sleep(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms));
+}
+
+/** Returns true if react-hook-form has a validation error at the given path */
+function getErrorAtPath(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  errors: FieldErrors<any>,
+  path: string[]
+): boolean {
+  let current: unknown = errors;
+  for (const key of path) {
+    if (current == null || typeof current !== "object") return false;
+    current = (current as Record<string, unknown>)[key];
+  }
+  return (
+    current != null &&
+    typeof current === "object" &&
+    "message" in (current as object)
+  );
 }
 
 export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
@@ -294,6 +312,26 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
     setEmitState("idle");
   };
 
+  /** Limpia lock + borrador y vuelve a un formulario vacío */
+  const onNewForm = useCallback(() => {
+    const vals = methods.getValues();
+    const enc = vals.encabezado as { fecha?: string; turno?: string };
+    if (enc?.fecha && enc?.turno) {
+      localStorage.removeItem(`${LOCK_PREFIX}${enc.fecha}-${enc.turno}`);
+    }
+    localStorage.removeItem(DRAFT_KEY);
+    reset(createEmptyReport());
+    setEmitState("idle");
+    setViewMode("panel");
+    setActiveTab("encabezado");
+  }, [methods, reset]);
+
+  /** Mapa de campos obligatorios usando el umbral de rendimiento de settings */
+  const requiredFieldsMap = useMemo(
+    () => getRequiredFieldsMap(settings.objetivoRendimientoHora),
+    [settings.objetivoRendimientoHora]
+  );
+
   // Calculate progress
   const formData = watch();
   const sectionKeys = TABS.filter((t) => t.id !== "encabezado").map(
@@ -310,16 +348,20 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
     | undefined;
   const encabezadoFilled = !!(enc?.fecha && enc?.turno && enc?.supervisor);
 
-  // Calculate incomplete required fields
-  const incompleteCount = REQUIRED_FIELDS_MAP.reduce((count, section) => {
+  // Calculate incomplete required fields (respects conditional fields)
+  const incompleteCount = requiredFieldsMap.reduce((count, section) => {
     return (
       count +
-      section.fields.filter(
-        (f) =>
+      section.fields.filter((f) => {
+        const isRequired =
+          !f.condition || f.condition(formData as Record<string, unknown>);
+        return (
+          isRequired &&
           !isFieldFilled(
             getNestedValue(formData as Record<string, unknown>, f.path)
           )
-      ).length
+        );
+      }).length
     );
   }, 0);
 
@@ -581,14 +623,24 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
                   ? "Reporte emitido — el email fue enviado"
                   : "Reporte emitido — solo lectura"}
               </div>
-              <a
-                href="/historial"
-                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-zinc-600 bg-white border border-zinc-200 rounded hover:border-zinc-300 hover:text-zinc-900"
-                style={{ transition: "all 0.15s var(--ease-spring)" }}
-              >
-                <ClockCounterClockwise size={14} />
-                Ver en historial
-              </a>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onNewForm}
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-zinc-600 bg-white border border-zinc-200 rounded hover:border-zinc-300 hover:text-zinc-900"
+                  style={{ transition: "all 0.15s var(--ease-spring)" }}
+                >
+                  <ArrowUUpLeft size={14} />
+                  Nuevo turno
+                </button>
+                <a
+                  href="/historial"
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-zinc-600 bg-white border border-zinc-200 rounded hover:border-zinc-300 hover:text-zinc-900"
+                  style={{ transition: "all 0.15s var(--ease-spring)" }}
+                >
+                  <ClockCounterClockwise size={14} />
+                  Ver en historial
+                </a>
+              </div>
             </div>
             <div
               className="bg-white border border-zinc-200 rounded overflow-hidden"
@@ -735,7 +787,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
       <FormProvider {...methods}>
         <form
           onSubmit={(e) => e.preventDefault()}
-          className="min-h-[100dvh] flex flex-col bg-zinc-50"
+          className="h-[100dvh] flex flex-col bg-zinc-50"
         >
           {sharedHeader}
 
@@ -785,8 +837,8 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
           </div>
 
           {/* Content + optional required panel */}
-          <div className="flex-1 flex min-h-0">
-            <div className="flex-1 min-w-0">
+          <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 overflow-y-auto min-w-0">
               <div className="max-w-5xl mx-auto w-full px-4 md:px-6 py-6">
                 {/* Validation error banner */}
                 {Object.keys(errors).length > 0 &&
@@ -838,10 +890,10 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
               </div>
             </div>
 
-            {/* Required fields panel — fixed overlay on mobile, inline on desktop */}
+            {/* Required fields panel — inline, pushes content */}
             {showRequiredPanel && (
-              <aside className="fixed inset-y-0 right-0 w-72 bg-zinc-950 border-l border-zinc-800 flex flex-col z-30 md:relative md:inset-auto">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 sticky top-0 bg-zinc-950 z-10">
+              <aside className="w-72 flex-none bg-zinc-950 border-l border-zinc-800 flex flex-col overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-zinc-950 shrink-0">
                   <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-[0.08em]">
                     Campos obligatorios
                   </span>
@@ -856,16 +908,21 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
-                  {REQUIRED_FIELDS_MAP.map((section) => {
-                    const incomplete = section.fields.filter(
-                      (f) =>
+                  {requiredFieldsMap.map((section) => {
+                    const incomplete = section.fields.filter((f) => {
+                      const isRequired =
+                        !f.condition ||
+                        f.condition(formData as Record<string, unknown>);
+                      return (
+                        isRequired &&
                         !isFieldFilled(
                           getNestedValue(
                             formData as Record<string, unknown>,
                             f.path
                           )
                         )
-                    );
+                      );
+                    });
                     const allDone = incomplete.length === 0;
 
                     return (
@@ -875,11 +932,12 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
                       >
                         <button
                           type="button"
-                          onClick={() => {
-                            setActiveTab(section.sectionId);
-                            setShowRequiredPanel(false);
+                          onClick={() => setActiveTab(section.sectionId)}
+                          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-zinc-800 text-left cursor-pointer"
+                          style={{
+                            transition:
+                              "background-color 0.15s var(--ease-spring)",
                           }}
-                          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-zinc-900 text-left"
                         >
                           <span
                             className={`text-[11px] font-semibold uppercase tracking-[0.08em] ${
@@ -903,17 +961,43 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
 
                         <div className="divide-y divide-zinc-800/50">
                           {section.fields.map((field) => {
+                            // Skip conditional fields whose condition isn't met
+                            const isRequired =
+                              !field.condition ||
+                              field.condition(
+                                formData as Record<string, unknown>
+                              );
+                            if (!isRequired) return null;
+
                             const val = getNestedValue(
                               formData as Record<string, unknown>,
                               field.path
                             );
                             const filled = isFieldFilled(val);
+                            const hasError = getErrorAtPath(
+                              errors,
+                              field.path
+                            );
                             return (
-                              <div
+                              <button
                                 key={field.path.join(".")}
-                                className="flex items-center gap-2.5 px-4 py-2"
+                                type="button"
+                                onClick={() =>
+                                  setActiveTab(section.sectionId)
+                                }
+                                className="w-full flex items-center gap-2.5 px-4 py-2 hover:bg-zinc-800 text-left cursor-pointer"
+                                style={{
+                                  transition:
+                                    "background-color 0.15s var(--ease-spring)",
+                                }}
                               >
-                                {filled ? (
+                                {hasError ? (
+                                  <Warning
+                                    size={12}
+                                    weight="fill"
+                                    className="text-red-400 shrink-0"
+                                  />
+                                ) : filled ? (
                                   <CheckCircle
                                     size={12}
                                     weight="fill"
@@ -927,19 +1011,21 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
                                 )}
                                 <span
                                   className={`text-xs ${
-                                    filled
-                                      ? "text-zinc-600 line-through"
-                                      : "text-zinc-400"
+                                    hasError
+                                      ? "text-red-400"
+                                      : filled
+                                        ? "text-zinc-600 line-through"
+                                        : "text-zinc-400"
                                   }`}
                                 >
                                   {field.label}
                                 </span>
-                                {filled && (
+                                {filled && !hasError && (
                                   <span className="ml-auto text-[10px] text-zinc-600 font-mono tabular-nums truncate max-w-[60px]">
                                     {String(val)}
                                   </span>
                                 )}
-                              </div>
+                              </button>
                             );
                           })}
                         </div>

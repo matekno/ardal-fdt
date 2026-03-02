@@ -6,13 +6,15 @@ import { FormField } from "@/components/ui/FormField";
 import { SelectField } from "@/components/ui/SelectField";
 import { TextAreaField } from "@/components/ui/TextAreaField";
 import { AGUA_EN_USO } from "@/lib/constants";
+import { useSettings } from "@/contexts/SettingsContext";
 
 export function SeccionMolino() {
+  const { objetivoRendimientoHora } = useSettings();
   const rendimientoRaw = useWatch({ name: "molino3.rendimientoHora" });
   const rendimientoNum = rendimientoRaw !== "" && rendimientoRaw !== null && rendimientoRaw !== undefined
     ? Number(rendimientoRaw)
     : null;
-  const mostrarCausa = rendimientoNum !== null && !isNaN(rendimientoNum) && rendimientoNum < 50;
+  const mostrarCausa = rendimientoNum !== null && !isNaN(rendimientoNum) && rendimientoNum < objetivoRendimientoHora;
 
   return (
     <SectionCard title="Molino 3">
