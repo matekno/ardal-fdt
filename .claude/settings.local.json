@@ -6,7 +6,23 @@
       "Bash(npm install:*)",
       "Bash(npm run build:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git restore:*)",
+      "Bash(git push:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:zenn.dev)",
+      "WebFetch(domain:testdino.com)",
+      "WebFetch(domain:shipyard.build)",
+      "WebFetch(domain:npmjs.com)",
+      "Bash(git pull origin master)",
+      "Bash(git rebase origin/master)",
+      "Bash(git stash)",
+      "Bash(git stash pop)",
+      "Bash(npx prisma init --datasource-provider postgresql)",
+      "Bash(npx prisma db push)",
+      "Bash(npx tsx --version)",
+      "Bash(node -e \":*)",
+      "Bash(npx prisma db seed)"
     ]
   }
 }

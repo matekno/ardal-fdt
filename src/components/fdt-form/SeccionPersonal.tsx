@@ -5,9 +5,11 @@ import { FormField } from "@/components/ui/FormField";
 import { TextAreaField } from "@/components/ui/TextAreaField";
 import { SelectField } from "@/components/ui/SelectField";
 import { DynamicList } from "@/components/ui/DynamicList";
-import { SUPERVISORES, MOTIVOS_AUSENCIA, PUESTOS } from "@/lib/constants";
+import { useSettings } from "@/contexts/SettingsContext";
 
 export function SeccionPersonal() {
+  const { supervisores, motivosAusencia, puestos } = useSettings();
+
   return (
     <SectionCard title="Personal" color="red">
       {/* Accidentes / Incidentes */}
@@ -34,13 +36,13 @@ export function SeccionPersonal() {
                 <SelectField
                   name={`personal.ausentes.${index}.nombre`}
                   label="Personal"
-                  options={SUPERVISORES}
+                  options={supervisores}
                   placeholder="Seleccionar..."
                 />
                 <SelectField
                   name={`personal.ausentes.${index}.motivo`}
                   label="Motivo"
-                  options={MOTIVOS_AUSENCIA}
+                  options={motivosAusencia}
                   placeholder="Seleccionar motivo..."
                 />
               </div>
@@ -68,13 +70,13 @@ export function SeccionPersonal() {
               <SelectField
                 name={`personal.cambiosPuesto.${index}.personal`}
                 label="Personal"
-                options={SUPERVISORES}
+                options={supervisores}
                 placeholder="Seleccionar..."
               />
               <SelectField
                 name={`personal.cambiosPuesto.${index}.puesto`}
                 label="Puesto que cubre"
-                options={PUESTOS}
+                options={puestos}
                 placeholder="Seleccionar puesto..."
               />
             </div>

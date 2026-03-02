@@ -53,3 +53,11 @@ model Report {
   @@index([supervisor])
   @@index([userEmail])
 }
+
+model Setting {
+  key         String   @id
+  value       Json
+  label       String?
+  description String?
+  updatedAt   DateTime @updatedAt
+}
