@@ -3,7 +3,7 @@
 import { useFormContext } from "react-hook-form";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { SelectField } from "@/components/ui/SelectField";
-import { TURNOS, SUPERVISORES } from "@/lib/constants";
+import { useSettings } from "@/contexts/SettingsContext";
 import type { Report } from "@/lib/schema";
 
 export function SeccionEncabezado() {
@@ -11,6 +11,7 @@ export function SeccionEncabezado() {
     register,
     formState: { errors },
   } = useFormContext<Report>();
+  const { turnos, supervisores } = useSettings();
 
   return (
     <SectionCard title="Encabezado" subtitle="Datos obligatorios del turno">
@@ -30,14 +31,14 @@ export function SeccionEncabezado() {
         <SelectField
           name="encabezado.turno"
           label="Turno *"
-          options={TURNOS}
+          options={turnos}
           placeholder="Seleccionar turno..."
         />
 
         <SelectField
           name="encabezado.supervisor"
           label="Supervisor *"
-          options={SUPERVISORES}
+          options={supervisores}
           placeholder="Seleccionar supervisor..."
         />
       </div>

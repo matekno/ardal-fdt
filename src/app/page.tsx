@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import Link from "next/link";
 import { TURNOS, SUPERVISORES } from "@/lib/constants";
-import { Warning, SignOut } from "@phosphor-icons/react";
+import { Warning, SignOut, ClockCounterClockwise } from "@phosphor-icons/react";
 
 export default function HomePage() {
   const router = useRouter();
@@ -165,6 +166,15 @@ export default function HomePage() {
           >
             Iniciar Reporte
           </button>
+
+          <Link
+            href="/historial"
+            className="flex items-center justify-center gap-2 w-full py-2.5 px-6 text-zinc-500 text-sm rounded-md border border-zinc-200 hover:border-zinc-400 hover:text-zinc-700 mt-3"
+            style={{ transition: "all 0.2s var(--ease-spring)" }}
+          >
+            <ClockCounterClockwise size={14} />
+            Ver historial
+          </Link>
         </div>
       </div>
     </div>

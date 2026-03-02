@@ -1,0 +1,102 @@
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { reportSchema, compilarResumenMantenimiento } from "@/lib/schema";
+import { extractMetrics } from "@/lib/report-metrics";
+import { generateEmailHTML, generateEmailSubject } from "@/lib/email-generator";
+import nodemailer from "nodemailer";
+
+export async function POST(req: Request) {
+  const session = await auth();
+  if (!session?.user?.email) {
+    return Response.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return Response.json({ error: "invalid_json" }, { status: 400 });
+  }
+
+  const parsed = reportSchema.safeParse(body);
+  if (!parsed.success) {
+    return Response.json(
+      { error: "validation_error", issues: parsed.error.issues },
+      { status: 422 }
+    );
+  }
+
+  const data = parsed.data;
+  const { fecha, turno } = data.encabezado;
+
+  // Check if already emitted
+  const existing = await prisma.report.findUnique({
+    where: { fecha_turno: { fecha, turno } },
+    select: { id: true, emailSent: true },
+  });
+
+  if (existing?.emailSent) {
+    return Response.json({ error: "ya_emitido" }, { status: 409 });
+  }
+
+  // Compile maintenance summary
+  data.resumenMantenimiento = compilarResumenMantenimiento(data);
+
+  // Upsert to DB
+  let reportId: string;
+  try {
+    const metrics = extractMetrics(data, session.user.email);
+    const report = await prisma.report.upsert({
+      where: { fecha_turno: { fecha, turno } },
+      create: metrics,
+      update: { ...metrics, updatedAt: new Date() },
+      select: { id: true },
+    });
+    reportId = report.id;
+  } catch {
+    return Response.json({ error: "db_error" }, { status: 500 });
+  }
+
+  // Generate and send email
+  const html = generateEmailHTML(data);
+  const subject = generateEmailSubject(data);
+
+  const emailTo = process.env.EMAIL_TO;
+  if (!emailTo) {
+    return Response.json({ error: "email_to_not_configured" }, { status: 500 });
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST ?? "smtp.gmail.com",
+      port: Number(process.env.SMTP_PORT ?? 587),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM ?? process.env.SMTP_USER,
+      to: emailTo,
+      subject,
+      html,
+    });
+  } catch (err) {
+    console.error("[emit] SMTP error:", err);
+    return Response.json({ error: "smtp_error" }, { status: 500 });
+  }
+
+  // Mark as sent
+  const emailSentAt = new Date();
+  await prisma.report.update({
+    where: { id: reportId },
+    data: { emailSent: true, emailSentAt },
+  });
+
+  return Response.json({
+    id: reportId,
+    emailSentAt: emailSentAt.toISOString(),
+  });
+}
