@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useForm, FormProvider, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -29,6 +30,7 @@ import {
   ChatText,
   Users,
   Gear,
+  House,
   Database,
   Sliders,
   Thermometer,
@@ -143,9 +145,11 @@ function getErrorAtPath(
 }
 
 export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("encabezado");
   const [viewMode, setViewMode] = useState<"panel" | "form">("panel");
   const [clearConfirm, setClearConfirm] = useState(false);
+  const [homeConfirm, setHomeConfirm] = useState(false);
   const [draftSavedAt, setDraftSavedAt] = useState<Date | null>(null);
   const [emitState, setEmitState] = useState<EmitState>("idle");
   const [emitError, setEmitError] = useState<string | null>(null);
@@ -452,25 +456,38 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
             </button>
           )}
 
-          {/* Historial */}
-          <a
-            href="/historial"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-zinc-400 hover:text-white rounded border border-zinc-800 hover:border-zinc-600"
-            style={{ transition: "all 0.15s var(--ease-spring)" }}
-          >
-            <ClockCounterClockwise size={12} />
-            <span className="hidden sm:inline">Historial</span>
-          </a>
-
-          {/* Configuración */}
-          <a
-            href="/configuracion"
-            className="p-1.5 text-zinc-600 hover:text-zinc-300 rounded"
-            title="Configuración"
-            style={{ transition: "color 0.15s var(--ease-spring)" }}
-          >
-            <Gear size={14} />
-          </a>
+          {/* Home — con confirmación */}
+          {homeConfirm ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-zinc-400">¿Volver al menú?</span>
+              <button
+                type="button"
+                onClick={() => router.push("/")}
+                className="text-xs text-white font-medium hover:text-zinc-300"
+                style={{ transition: "color 0.15s var(--ease-spring)" }}
+              >
+                Sí
+              </button>
+              <button
+                type="button"
+                onClick={() => setHomeConfirm(false)}
+                className="text-xs text-zinc-600 hover:text-zinc-400"
+                style={{ transition: "color 0.15s var(--ease-spring)" }}
+              >
+                Cancelar
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setHomeConfirm(true)}
+              className="p-1.5 text-zinc-600 hover:text-zinc-300 rounded"
+              title="Volver al menú inicial"
+              style={{ transition: "color 0.15s var(--ease-spring)" }}
+            >
+              <House size={14} />
+            </button>
+          )}
 
           {/* Clear draft (not in emitted state) */}
           {!isEmitted &&
