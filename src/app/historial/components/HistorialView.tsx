@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, ArrowRight, ClockCounterClockwise, X, Warning,
-  CheckCircle, Envelope,
+  CheckCircle, Envelope, ArrowLineDown,
 } from "@phosphor-icons/react";
 import { TURNOS, SUPERVISORES, OBJETIVO_MOLDES_COLADOS, OBJETIVO_RENDIMIENTO_HORA } from "@/lib/constants";
 import { generateEmailHTML } from "@/lib/email-generator";
@@ -70,6 +70,16 @@ function buildQuery(filters: Filters, page: number): string {
   return s ? `?${s}` : "";
 }
 
+function buildExportUrl(filters: Filters): string {
+  const p = new URLSearchParams();
+  if (filters.turno) p.set("turno", filters.turno);
+  if (filters.supervisor) p.set("supervisor", filters.supervisor);
+  if (filters.desde) p.set("desde", filters.desde);
+  if (filters.hasta) p.set("hasta", filters.hasta);
+  const s = p.toString();
+  return `/api/reports/export${s ? `?${s}` : ""}`;
+}
+
 export function HistorialView({ reports, total, page, limit, filters }: Props) {
   const [drawerReport, setDrawerReport] = useState<ReportRow | null>(null);
   const [drawerHTML, setDrawerHTML] = useState<string | null>(null);
@@ -121,6 +131,14 @@ export function HistorialView({ reports, total, page, limit, filters }: Props) {
             >
               {showCharts ? "Ocultar gráficos" : "Ver gráficos"}
             </button>
+            <a
+              href={buildExportUrl(filters)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-zinc-400 hover:text-white rounded border border-zinc-800 hover:border-zinc-600"
+              style={{ transition: "all 0.15s var(--ease-spring)" }}
+            >
+              <ArrowLineDown size={12} />
+              <span className="hidden sm:inline">Descargar xlsx</span>
+            </a>
             <Link
               href="/fdt"
               className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-zinc-400 hover:text-white rounded border border-zinc-800 hover:border-zinc-600"
