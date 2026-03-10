@@ -22,6 +22,7 @@ export default function HomePage() {
   const [view, setView] = useState<View>("menu");
   const [supervisor, setSupervisor] = useState("");
   const [turno, setTurno] = useState("TURNO MAÑANA");
+  const [fecha, setFecha] = useState(() => new Date().toISOString().split("T")[0]);
   const [error, setError] = useState(false);
 
   const handleStart = () => {
@@ -30,8 +31,7 @@ export default function HomePage() {
       return;
     }
     setError(false);
-    const today = new Date().toISOString().split("T")[0];
-    const draft = { encabezado: { fecha: today, turno, supervisor } };
+    const draft = { encabezado: { fecha, turno, supervisor } };
     localStorage.setItem("fdt-draft", JSON.stringify(draft));
     router.push("/fdt");
   };
@@ -196,6 +196,19 @@ export default function HomePage() {
               <ArrowLeft size={11} weight="bold" />
               Nuevo reporte
             </button>
+
+            {/* Fecha */}
+            <div className="mb-5">
+              <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.1em] mb-1.5">
+                Fecha del reporte
+              </label>
+              <input
+                type="date"
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
+                className="w-full"
+              />
+            </div>
 
             {/* Supervisor */}
             <div className="mb-5">
