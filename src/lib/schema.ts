@@ -42,7 +42,8 @@ const horaExtraSchema = z.object({
 });
 
 const permisoSchema = z.object({
-  personalYMotivo: z.string(),
+  personal: z.string(),
+  motivo: z.string(),
 });
 
 const devolucionHoraSchema = z.object({
@@ -52,11 +53,13 @@ const devolucionHoraSchema = z.object({
 });
 
 const personalNuevoSchema = z.object({
-  personalYPuesto: z.string(),
+  personal: z.string(),
+  puesto: z.string(),
 });
 
 const capacitacionSchema = z.object({
-  personalYCapacitacion: z.string(),
+  personal: z.string(),
+  capacitacion: z.string(),
 });
 
 // Nro de torta/molde (compartido por todos los campos "orden")
@@ -126,7 +129,7 @@ export const personalSchema = z.object({
     cantidad: optNum,
     lista: z.array(personalNuevoSchema).max(5),
   }),
-  vacaciones: z.string(),
+  vacaciones: z.array(z.object({ personal: z.string() })).max(8),
   capacitacion: z.array(capacitacionSchema).max(3),
   otrosComentarios: z.string(),
 });
@@ -348,7 +351,7 @@ export function createEmptyReport(): Report {
       permisos: [],
       devolucionHoras: { cantidad: null, lista: [] },
       personalNuevo: { cantidad: null, lista: [] },
-      vacaciones: "",
+      vacaciones: [],
       capacitacion: [],
       otrosComentarios: "",
     },

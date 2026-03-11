@@ -54,8 +54,10 @@ export function generateEmailHTML(report: Report): string {
   }
   if (p.permisos.length > 0) {
     pRows.push(subHeader("Permisos"));
-    for (const perm of p.permisos)
-      pRows.push(valRow("Personal / Motivo", perm.personalYMotivo));
+    for (const perm of p.permisos) {
+      const motivo = perm.motivo ? ` — ${perm.motivo}` : "";
+      pRows.push(valRow("Permiso", `${perm.personal}${motivo}`));
+    }
   }
   if (p.devolucionHoras.lista.length > 0) {
     pRows.push(subHeader("Devolución de horas"));
@@ -71,15 +73,19 @@ export function generateEmailHTML(report: Report): string {
       )
     );
     for (const n of p.personalNuevo.lista)
-      pRows.push(valRow("Personal / Puesto", n.personalYPuesto));
+      pRows.push(valRow(n.personal, n.puesto));
   }
-  pRows.push(txtRow("Vacaciones", p.vacaciones));
+  if (p.vacaciones.length > 0) {
+    pRows.push(subHeader("Vacaciones"));
+    for (const v of p.vacaciones)
+      pRows.push(valRow("Personal", v.personal));
+  }
   if (p.capacitacion.length > 0) {
     pRows.push(subHeader("Capacitación"));
-    for (const c of p.capacitacion)
-      pRows.push(
-        valRow("Personal / Capacitación", c.personalYCapacitacion)
-      );
+    for (const c of p.capacitacion) {
+      const cap = c.capacitacion ? ` — ${c.capacitacion}` : "";
+      pRows.push(valRow("Capacitación", `${c.personal}${cap}`));
+    }
   }
   pRows.push(txtRow("Otros comentarios", p.otrosComentarios));
   if (pRows.some((r) => r !== "")) {

@@ -8,7 +8,7 @@ import { DynamicList } from "@/components/ui/DynamicList";
 import { useSettings } from "@/contexts/SettingsContext";
 
 export function SeccionPersonal() {
-  const { supervisores, motivosAusencia, puestos } = useSettings();
+  const { operarios, motivosAusencia, puestos } = useSettings();
 
   return (
     <SectionCard title="Personal" color="red">
@@ -36,7 +36,7 @@ export function SeccionPersonal() {
                 <SelectField
                   name={`personal.ausentes.${index}.nombre`}
                   label="Personal"
-                  options={supervisores}
+                  options={operarios}
                   placeholder="Seleccionar..."
                 />
                 <SelectField
@@ -70,7 +70,7 @@ export function SeccionPersonal() {
               <SelectField
                 name={`personal.cambiosPuesto.${index}.personal`}
                 label="Personal"
-                options={supervisores}
+                options={operarios}
                 placeholder="Seleccionar..."
               />
               <SelectField
@@ -93,9 +93,11 @@ export function SeccionPersonal() {
           newItem={() => ({ personal: "", desdeHora: "", hastaHora: "" })}
           renderItem={(index) => (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-              <FormField
+              <SelectField
                 name={`personal.horasExtras.${index}.personal`}
                 label="Personal"
+                options={operarios}
+                placeholder="Seleccionar..."
               />
               <FormField
                 name={`personal.horasExtras.${index}.desdeHora`}
@@ -116,12 +118,20 @@ export function SeccionPersonal() {
           name="personal.permisos"
           maxItems={3}
           label="Permiso"
-          newItem={() => ({ personalYMotivo: "" })}
+          newItem={() => ({ personal: "", motivo: "" })}
           renderItem={(index) => (
-            <FormField
-              name={`personal.permisos.${index}.personalYMotivo`}
-              label="Personal / Motivo"
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <SelectField
+                name={`personal.permisos.${index}.personal`}
+                label="Personal"
+                options={operarios}
+                placeholder="Seleccionar..."
+              />
+              <FormField
+                name={`personal.permisos.${index}.motivo`}
+                label="Motivo"
+              />
+            </div>
           )}
         />
       </div>
@@ -141,9 +151,11 @@ export function SeccionPersonal() {
             newItem={() => ({ personal: "", desdeHora: "", hastaHora: "" })}
             renderItem={(index) => (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                <FormField
+                <SelectField
                   name={`personal.devolucionHoras.lista.${index}.personal`}
                   label="Personal"
+                  options={operarios}
+                  placeholder="Seleccionar..."
                 />
                 <FormField
                   name={`personal.devolucionHoras.lista.${index}.desdeHora`}
@@ -171,12 +183,22 @@ export function SeccionPersonal() {
             name="personal.personalNuevo.lista"
             maxItems={5}
             label="Personal nuevo"
-            newItem={() => ({ personalYPuesto: "" })}
+            newItem={() => ({ personal: "", puesto: "" })}
             renderItem={(index) => (
-              <FormField
-                name={`personal.personalNuevo.lista.${index}.personalYPuesto`}
-                label="Personal / Puesto"
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <SelectField
+                  name={`personal.personalNuevo.lista.${index}.personal`}
+                  label="Personal"
+                  options={operarios}
+                  placeholder="Seleccionar..."
+                />
+                <SelectField
+                  name={`personal.personalNuevo.lista.${index}.puesto`}
+                  label="Puesto"
+                  options={puestos}
+                  placeholder="Seleccionar puesto..."
+                />
+              </div>
             )}
           />
         </div>
@@ -184,7 +206,20 @@ export function SeccionPersonal() {
 
       {/* ── Vacaciones ── */}
       <div className="border-t pt-4 mt-2">
-        <TextAreaField name="personal.vacaciones" label="Vacaciones" rows={2} />
+        <DynamicList
+          name="personal.vacaciones"
+          maxItems={8}
+          label="Vacaciones"
+          newItem={() => ({ personal: "" })}
+          renderItem={(index) => (
+            <SelectField
+              name={`personal.vacaciones.${index}.personal`}
+              label="Personal"
+              options={operarios}
+              placeholder="Seleccionar..."
+            />
+          )}
+        />
       </div>
 
       {/* ── Capacitación ── */}
@@ -193,12 +228,20 @@ export function SeccionPersonal() {
           name="personal.capacitacion"
           maxItems={3}
           label="Capacitación"
-          newItem={() => ({ personalYCapacitacion: "" })}
+          newItem={() => ({ personal: "", capacitacion: "" })}
           renderItem={(index) => (
-            <FormField
-              name={`personal.capacitacion.${index}.personalYCapacitacion`}
-              label="Personal / Capacitación"
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <SelectField
+                name={`personal.capacitacion.${index}.personal`}
+                label="Personal"
+                options={operarios}
+                placeholder="Seleccionar..."
+              />
+              <FormField
+                name={`personal.capacitacion.${index}.capacitacion`}
+                label="Capacitación"
+              />
+            </div>
           )}
         />
       </div>

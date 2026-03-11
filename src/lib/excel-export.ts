@@ -81,13 +81,13 @@ function flattenReport(r: ReportWithData): Record<string, string | number | Date
     "Comentario Ausentes": s(p.comentarioAusentes),
     "Cambios de Puesto": p.cambiosPuesto.map((c) => `${c.personal} → ${c.puesto}`).join("\n"),
     "Horas Extras": p.horasExtras.map((h) => `${h.personal} (${h.desdeHora}–${h.hastaHora})`).join("\n"),
-    "Permisos": p.permisos.map((pe) => pe.personalYMotivo).join("\n"),
+    "Permisos": p.permisos.map((pe) => `${pe.personal} — ${pe.motivo}`).join("\n"),
     "Dev. Horas - Cant.": n(p.devolucionHoras.cantidad),
     "Dev. Horas - Lista": p.devolucionHoras.lista.map((l) => `${l.personal} (${l.desdeHora}–${l.hastaHora})`).join("\n"),
     "Personal Nuevo - Cant.": n(p.personalNuevo.cantidad),
-    "Personal Nuevo - Lista": p.personalNuevo.lista.map((l) => l.personalYPuesto).join("\n"),
-    "Vacaciones": s(p.vacaciones),
-    "Capacitación": p.capacitacion.map((c) => c.personalYCapacitacion).join("\n"),
+    "Personal Nuevo - Lista": p.personalNuevo.lista.map((l) => `${l.personal} → ${l.puesto}`).join("\n"),
+    "Vacaciones": p.vacaciones.map((v) => v.personal).join("\n"),
+    "Capacitación": p.capacitacion.map((c) => `${c.personal} — ${c.capacitacion}`).join("\n"),
     "Personal - Otros": s(p.otrosComentarios),
 
     // ── MOLINO 3 ──
@@ -243,7 +243,7 @@ export function generateReportsXlsx(reports: ReportWithData[]): Buffer {
   // Ajustar anchos de columna: texto largo = 40, numéricos = 14, default = 20
   const wideTextCols = new Set([
     "Supervisor", "Ausentes", "Cambios de Puesto", "Horas Extras", "Permisos",
-    "Dev. Horas - Lista", "Personal Nuevo - Lista", "Capacitación",
+    "Dev. Horas - Lista", "Personal Nuevo - Lista", "Vacaciones", "Capacitación",
     "Accidentes", "Incidentes", "No Cumplimiento", "General - Comentarios",
     "M3 Causa Bajo Rendimiento", "Stock Comentarios", "Stock Demoras",
     "SC Pruebas/Ensayos", "SC Demoras", "SC Mantenimiento", "SC Limpieza", "SC Otros",
