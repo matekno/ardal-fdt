@@ -6,7 +6,7 @@ import {
   ArrowLeft, ArrowRight, ClockCounterClockwise, X, Warning,
   CheckCircle, Envelope, ArrowLineDown,
 } from "@phosphor-icons/react";
-import { TURNOS, SUPERVISORES, OBJETIVO_MOLDES_COLADOS, OBJETIVO_RENDIMIENTO_HORA } from "@/lib/constants";
+import { OBJETIVO_MOLDES_COLADOS, OBJETIVO_RENDIMIENTO_HORA } from "@/lib/constants";
 import { generateEmailHTML } from "@/lib/email-generator";
 import { compilarResumenMantenimiento } from "@/lib/schema";
 import type { Report } from "@/lib/schema";
@@ -52,6 +52,8 @@ type Props = {
   page: number;
   limit: number;
   filters: Filters;
+  supervisores: string[];
+  turnos: string[];
 };
 
 function n(val: number | null | undefined, decimals = 0): string {
@@ -80,7 +82,7 @@ function buildExportUrl(filters: Filters): string {
   return `/api/reports/export${s ? `?${s}` : ""}`;
 }
 
-export function HistorialView({ reports, total, page, limit, filters }: Props) {
+export function HistorialView({ reports, total, page, limit, filters, supervisores, turnos }: Props) {
   const [drawerReport, setDrawerReport] = useState<ReportRow | null>(null);
   const [drawerHTML, setDrawerHTML] = useState<string | null>(null);
   const [drawerLoading, setDrawerLoading] = useState(false);
@@ -187,7 +189,7 @@ export function HistorialView({ reports, total, page, limit, filters }: Props) {
               className="text-xs px-2.5 py-1.5 border border-zinc-200 rounded bg-white text-zinc-800 focus:outline-none focus:border-[#ea580c]"
             >
               <option value="">Todos</option>
-              {TURNOS.map((t) => (
+              {turnos.map((t) => (
                 <option key={t} value={t}>{t.replace("TURNO ", "")}</option>
               ))}
             </select>
@@ -202,7 +204,7 @@ export function HistorialView({ reports, total, page, limit, filters }: Props) {
               className="text-xs px-2.5 py-1.5 border border-zinc-200 rounded bg-white text-zinc-800 focus:outline-none focus:border-[#ea580c]"
             >
               <option value="">Todos</option>
-              {SUPERVISORES.map((s) => (
+              {supervisores.map((s) => (
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>

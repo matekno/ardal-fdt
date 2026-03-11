@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { getAppSettings } from "@/lib/settings";
 import { HistorialView } from "./components/HistorialView";
 
 const LIMIT = 50;
@@ -66,7 +67,7 @@ export default async function HistorialPage({
       : {}),
   };
 
-  const [reports, total] = await Promise.all([
+  const [reports, total, settings] = await Promise.all([
     prisma.report.findMany({
       where,
       orderBy: [{ fecha: "desc" }, { turno: "asc" }],
@@ -75,6 +76,7 @@ export default async function HistorialPage({
       select: SELECT,
     }),
     prisma.report.count({ where }),
+    getAppSettings(),
   ]);
 
   return (
@@ -84,6 +86,8 @@ export default async function HistorialPage({
       page={page}
       limit={LIMIT}
       filters={{ turno, supervisor, desde, hasta }}
+      supervisores={settings.supervisores}
+      turnos={settings.turnos}
     />
   );
 }
