@@ -30,38 +30,46 @@ export async function GET(request: NextRequest) {
       : {}),
   };
 
-  const reports = await prisma.report.findMany({
-    where,
-    orderBy: [{ fecha: "desc" }, { turno: "asc" }],
-    take: 500,
-    select: {
-      id: true,
-      createdAt: true,
-      fecha: true,
-      turno: true,
-      supervisor: true,
-      userEmail: true,
-      emailSent: true,
-      data: true,
-    },
-  });
+  try {
+    const reports = await prisma.report.findMany({
+      where,
+      orderBy: [{ fecha: "desc" }, { turno: "asc" }],
+      take: 500,
+      select: {
+        id: true,
+        createdAt: true,
+        fecha: true,
+        turno: true,
+        supervisor: true,
+        userEmail: true,
+        emailSent: true,
+        data: true,
+      },
+    });
 
-  const reportsWithData = reports.map((r) => ({
-    ...r,
-    data: r.data as unknown as Report,
-  }));
+    const reportsWithData = reports.map((r) => ({
+      ...r,
+      data: r.data as unknown as Report,
+    }));
 
-  const buffer = generateReportsXlsx(reportsWithData);
+    const buffer = generateReportsXlsx(reportsWithData);
 
-  const date = new Date().toISOString().slice(0, 10);
-  const filename = `reportes-fdt-${date}.xlsx`;
+    const date = new Date().toISOString().slice(0, 10);
+    const filename = `reportes-fdt-${date}.xlsx`;
 
-  return new NextResponse(new Uint8Array(buffer), {
-    status: 200,
-    headers: {
-      "Content-Type":
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="${filename}"`,
-    },
-  });
+    return new NextResponse(new Uint8Array(buffer), {
+      status: 200,
+      headers: {
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+      },
+    });
+  } catch (err) {
+    console.error("[export] Error generating xlsx:", err);
+    return NextResponse.json(
+      { error: "Error al generar el archivo de exportación" },
+      { status: 500 }
+    );
+  }
 }

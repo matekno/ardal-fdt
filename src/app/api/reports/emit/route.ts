@@ -90,10 +90,16 @@ export async function POST(req: Request) {
 
   // Mark as sent
   const emailSentAt = new Date();
-  await prisma.report.update({
-    where: { id: reportId },
-    data: { emailSent: true, emailSentAt },
-  });
+  try {
+    await prisma.report.update({
+      where: { id: reportId },
+      data: { emailSent: true, emailSentAt },
+    });
+  } catch (err) {
+    // Email was sent but DB flag failed — log but return success
+    // so the supervisor doesn't retry and send a duplicate email
+    console.error("[emit] Failed to mark emailSent:", err);
+  }
 
   return Response.json({
     id: reportId,
