@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getAppSettings } from "@/lib/settings";
 import { reportSchema, compilarResumenMantenimiento } from "@/lib/schema";
 import { extractMetrics } from "@/lib/report-metrics";
 import { generateEmailHTML, generateEmailSubject } from "@/lib/email-generator";
@@ -61,7 +62,8 @@ export async function POST(req: Request) {
   const html = generateEmailHTML(data);
   const subject = generateEmailSubject(data);
 
-  const emailTo = process.env.EMAIL_TO;
+  const settings = await getAppSettings();
+  const emailTo = settings.emailTo;
   if (!emailTo) {
     return Response.json({ error: "email_to_not_configured" }, { status: 500 });
   }
