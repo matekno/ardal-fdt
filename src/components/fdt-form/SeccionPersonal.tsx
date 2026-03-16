@@ -1,5 +1,6 @@
 "use client";
 
+import { useWatch } from "react-hook-form";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { FormField } from "@/components/ui/FormField";
 import { TextAreaField } from "@/components/ui/TextAreaField";
@@ -9,6 +10,8 @@ import { useSettings } from "@/contexts/SettingsContext";
 
 export function SeccionPersonal() {
   const { operarios, motivosAusencia, puestos } = useSettings();
+  const ausentes = useWatch({ name: "personal.ausentes" }) as unknown[];
+  const cantidadAusentes = Array.isArray(ausentes) ? ausentes.length : 0;
 
   return (
     <SectionCard title="Personal" color="red">
@@ -20,6 +23,17 @@ export function SeccionPersonal() {
 
       {/* ── Ausentes ── */}
       <div className="border-t pt-4 mt-2">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em]">
+            Ausentes
+          </span>
+          {cantidadAusentes > 0 && (
+            <span className="text-[11px] font-mono tabular-nums text-zinc-400">
+              <span className="text-zinc-700 font-semibold">{cantidadAusentes}</span>{" "}
+              {cantidadAusentes === 1 ? "ausente" : "ausentes"}
+            </span>
+          )}
+        </div>
         <DynamicList
           name="personal.ausentes"
           maxItems={8}

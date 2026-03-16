@@ -165,8 +165,7 @@ function NumberEditor({
   return (
     <div className="flex items-center gap-3">
       <input
-        type="text"
-        inputMode="numeric"
+        type="number"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onWheel={(e) => e.currentTarget.blur()}

@@ -410,13 +410,15 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
             </span>
           )}
 
-          {/* Progress counter */}
+          {/* Secciones con novedades */}
           {!isEmitted && (
-            <span className="text-xs font-mono tabular-nums text-zinc-500">
-              <span className="text-white">
-                {filledCount + (encabezadoFilled ? 1 : 0)}
+            <span className="text-[11px] tabular-nums text-zinc-500 hidden sm:inline">
+              <span className="text-white font-semibold">{filledCount}</span>
+              <span className="text-zinc-600">
+                {" / "}
+                {sectionKeys.length}
               </span>
-              <span className="text-zinc-700">/{TABS.length}</span>
+              <span className="text-zinc-500"> secciones con novedades</span>
             </span>
           )}
 
@@ -811,9 +813,6 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
           {/* Tab strip */}
           <div className="bg-white border-b border-zinc-200 sticky top-[49px] z-10">
             <div className="max-w-5xl mx-auto px-4 md:px-6">
-              <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.08em] pt-2">
-                Secciones con novedades
-              </p>
               <div className="flex overflow-x-auto scrollbar-hide">
                 {TABS.map((tab) => {
                   const isActive = activeTab === tab.id;
