@@ -20,35 +20,28 @@ export function SeccionPersonal() {
 
       {/* ── Ausentes ── */}
       <div className="border-t pt-4 mt-2">
-        <FormField
-          name="personal.cantidadAusentes"
-          label="Cantidad ausentes"
-          type="number"
+        <DynamicList
+          name="personal.ausentes"
+          maxItems={8}
+          label="Ausente"
+          newItem={() => ({ nombre: "", motivo: "" })}
+          renderItem={(index) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <SelectField
+                name={`personal.ausentes.${index}.nombre`}
+                label="Personal"
+                options={operarios}
+                placeholder="Seleccionar..."
+              />
+              <SelectField
+                name={`personal.ausentes.${index}.motivo`}
+                label="Motivo"
+                options={motivosAusencia}
+                placeholder="Seleccionar motivo..."
+              />
+            </div>
+          )}
         />
-        <div className="mt-3">
-          <DynamicList
-            name="personal.ausentes"
-            maxItems={8}
-            label="Ausente"
-            newItem={() => ({ nombre: "", motivo: "" })}
-            renderItem={(index) => (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <SelectField
-                  name={`personal.ausentes.${index}.nombre`}
-                  label="Personal"
-                  options={operarios}
-                  placeholder="Seleccionar..."
-                />
-                <SelectField
-                  name={`personal.ausentes.${index}.motivo`}
-                  label="Motivo"
-                  options={motivosAusencia}
-                  placeholder="Seleccionar motivo..."
-                />
-              </div>
-            )}
-          />
-        </div>
         <div className="mt-3">
           <TextAreaField
             name="personal.comentarioAusentes"

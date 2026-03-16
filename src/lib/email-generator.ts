@@ -31,7 +31,7 @@ export function generateEmailHTML(report: Report): string {
   pRows.push(valRow("Accidentes", p.accidentes));
   pRows.push(valRow("Incidentes", p.incidentes));
   if (p.ausentes.length > 0) {
-    pRows.push(valRow("Cantidad ausentes", p.cantidadAusentes));
+    pRows.push(valRow("Cantidad ausentes", p.ausentes.length));
     for (const a of p.ausentes) {
       const motivo = a.motivo ? ` — ${a.motivo}` : "";
       pRows.push(valRow("Ausente", `${a.nombre}${motivo}`));

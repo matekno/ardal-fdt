@@ -40,7 +40,7 @@ export function extractMetrics(report: Report, userEmail: string) {
     scrapParcialPct: report.scrap.parcialPct,
 
     transformacionTotalPallets,
-    cantidadAusentes: report.personal.cantidadAusentes ?? null,
+    cantidadAusentes: report.personal.ausentes?.length ?? null,
     tieneIncidentes: !!report.personal.incidentes?.trim(),
     tieneAccidentes: !!report.personal.accidentes?.trim(),
 
