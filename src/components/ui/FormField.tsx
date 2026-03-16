@@ -34,6 +34,7 @@ export function FormField({
           type={type}
           placeholder={placeholder}
           step={type === "number" ? "any" : undefined}
+          onWheel={type === "number" ? (e) => e.currentTarget.blur() : undefined}
           className={`flex-1 ${error ? "border-red-400 bg-red-50" : ""}`}
         />
         {unit && (

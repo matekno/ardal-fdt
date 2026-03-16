@@ -159,20 +159,22 @@ function NumberEditor({
   initialValue: number;
   unit?: string;
 }) {
-  const [value, setValue] = useState(initialValue);
+  const [value, setValue] = useState(String(initialValue));
   const { status, save } = useSaveSetting(settingKey);
 
   return (
     <div className="flex items-center gap-3">
       <input
-        type="number"
+        type="text"
+        inputMode="numeric"
         value={value}
-        onChange={(e) => setValue(Number(e.target.value))}
+        onChange={(e) => setValue(e.target.value)}
+        onWheel={(e) => e.currentTarget.blur()}
         className="w-24 px-2 py-1.5 text-sm border border-zinc-200 rounded bg-white focus:border-[#ea580c] focus:outline-none font-mono tabular-nums"
       />
       {unit && <span className="text-xs text-zinc-400">{unit}</span>}
       <button
-        onClick={() => save(value)}
+        onClick={() => save(Number(value))}
         disabled={status === "saving"}
         className="px-3 py-1.5 text-xs font-medium bg-[#ea580c] text-white rounded hover:bg-[#c2410c] disabled:opacity-50"
         style={{ transition: "all 0.15s" }}
