@@ -8,7 +8,7 @@ interface SectionCardProps {
 }
 
 const accentMap = {
-  orange: "border-[#ea580c]",
+  orange: "border-ardal",
   red: "border-red-500",
   dark: "border-zinc-600",
 };
