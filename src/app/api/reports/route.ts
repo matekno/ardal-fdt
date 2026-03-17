@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { reportSchema } from "@/lib/schema";
+import { createReportSchema } from "@/lib/schema";
 import { extractMetrics } from "@/lib/report-metrics";
+import { getAppSettings } from "@/lib/settings";
 
 // POST /api/reports — guarda o actualiza un reporte finalizado
 export async function POST(request: NextRequest) {
@@ -18,7 +19,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
   }
 
-  const parsed = reportSchema.safeParse(body);
+  const settings = await getAppSettings();
+  const dynamicSchema = createReportSchema(settings);
+  const parsed = dynamicSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Schema inválido", issues: parsed.error.issues },
