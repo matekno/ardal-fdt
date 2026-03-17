@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useForm, FormProvider, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  reportSchema,
   createReportSchema,
   createEmptyReport,
   compilarResumenMantenimiento,
@@ -234,7 +233,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
       return;
     }
 
-    const parsed = reportSchema.safeParse(raw);
+    const parsed = schema.safeParse(raw);
     if (!parsed.success) {
       setViewMode("form");
       setShowRequiredPanel(true);
@@ -242,8 +241,10 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
       return;
     }
 
+    // Si estamos en el panel, volver al form antes de mostrar el modal
+    setViewMode("form");
     setEmitState("confirming");
-  }, [methods]);
+  }, [methods, schema]);
 
   // Execute the emit: save to DB + send email
   const onEmitConfirm = useCallback(async () => {
@@ -252,7 +253,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
     setEmitStepIndex(0);
 
     const raw = methods.getValues();
-    const parsed = reportSchema.safeParse(raw);
+    const parsed = schema.safeParse(raw);
     if (!parsed.success) {
       setEmitState("error");
       setEmitError("El formulario tiene errores de validación.");
@@ -309,7 +310,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
       setEmitState("error");
       setEmitError("Error de conexión. Verificá tu red e intentá de nuevo.");
     }
-  }, [methods]);
+  }, [methods, schema]);
 
   const onClearDraft = () => {
     localStorage.removeItem(DRAFT_KEY);
@@ -632,7 +633,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
 
   // ─── Success / Locked view ────────────────────────────────────────────────────
   if (emitState === "success" || emitState === "locked") {
-    const emailHTML = generateEmailHTML(methods.getValues() as Report);
+    const emailHTML = generateEmailHTML(methods.getValues() as Report, settings);
     return (
       <SettingsProvider settings={settings}>
         <div className="min-h-[100dvh] bg-zinc-50 flex flex-col">

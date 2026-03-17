@@ -101,7 +101,7 @@ export function HistorialView({ reports, total, page, limit, filters, supervisor
         const full = await res.json();
         const data = full.data as Report;
         data.resumenMantenimiento = compilarResumenMantenimiento(data);
-        setDrawerHTML(generateEmailHTML(data));
+        setDrawerHTML(generateEmailHTML(data, { objetivoMoldesColados, objetivoRendimientoHora }));
       }
     } catch {
       // silently fail — user can close drawer
