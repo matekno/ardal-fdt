@@ -58,6 +58,8 @@ export function SeccionMolino() {
       />
       <TextAreaField name="molino3.mantenimiento" label="Mantenimiento" />
       <TextAreaField name="molino3.limpieza" label="Limpieza" />
+      <TextAreaField name="molino3.demoras" label="Demoras" />
+      <TextAreaField name="molino3.comentarios" label="Comentarios" />
     </SectionCard>
   );
 }

@@ -260,6 +260,14 @@ export function SeccionPersonal() {
           label="Otros comentarios"
         />
       </div>
+
+      {/* ── Novedades operativas ── */}
+      <div className="border-t pt-4 mt-2 space-y-3">
+        <TextAreaField name="personal.demoras" label="Demoras" />
+        <TextAreaField name="personal.mantenimiento" label="Mantenimiento" />
+        <TextAreaField name="personal.limpieza" label="Limpieza" />
+        <TextAreaField name="personal.comentarios" label="Comentarios" />
+      </div>
     </SectionCard>
   );
 }

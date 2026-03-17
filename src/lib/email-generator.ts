@@ -92,6 +92,10 @@ export function generateEmailHTML(report: Report, settings?: EmailSettings): str
     }
   }
   pRows.push(txtRow("Otros comentarios", p.otrosComentarios));
+  pRows.push(txtRow("Demoras", p.demoras));
+  pRows.push(txtRow("Mantenimiento", p.mantenimiento));
+  pRows.push(txtRow("Limpieza", p.limpieza));
+  pRows.push(txtRow("Comentarios", p.comentarios));
   if (pRows.some((r) => r !== "")) {
     sections.push(section("Personal", pRows, "#dc2626"));
   }
@@ -131,6 +135,8 @@ export function generateEmailHTML(report: Report, settings?: EmailSettings): str
       mRows.push(valRow("Agua en uso", m3.aguaEnUso));
       mRows.push(txtRow("Mantenimiento", m3.mantenimiento));
       mRows.push(txtRow("Limpieza", m3.limpieza));
+      mRows.push(txtRow("Demoras", m3.demoras));
+      mRows.push(txtRow("Comentarios", m3.comentarios));
     }
     if (sbHas) {
       mRows.push(subHeader("Stock de Barro"));
@@ -138,6 +144,8 @@ export function generateEmailHTML(report: Report, settings?: EmailSettings): str
       mRows.push(bigRow("Recupero", sb.recupero, "MT"));
       mRows.push(txtRow("Comentarios", sb.comentarios));
       mRows.push(txtRow("Demoras", sb.demoras));
+      mRows.push(txtRow("Mantenimiento", sb.mantenimiento));
+      mRows.push(txtRow("Limpieza", sb.limpieza));
     }
     sections.push(section("Molino", mRows));
   }
@@ -173,7 +181,7 @@ export function generateEmailHTML(report: Report, settings?: EmailSettings): str
     scRows.push(txtRow("Demoras", sc.demoras));
     scRows.push(txtRow("Mantenimiento", sc.mantenimiento));
     scRows.push(txtRow("Limpieza", sc.limpieza));
-    scRows.push(txtRow("Otros", sc.otros));
+    scRows.push(txtRow("Comentarios", sc.otros));
     sections.push(section("Sala de Colado", scRows));
   }
 
@@ -211,10 +219,14 @@ export function generateEmailHTML(report: Report, settings?: EmailSettings): str
 
   // ── ROTADOR ──
   const rot = report.rotador;
-  if (rot.arrastreNylon.length > 0 || rot.moldeFisurado.length > 0) {
+  if (hasAnyField(rot as unknown as Record<string, unknown>)) {
     const rRows: string[] = [];
     rRows.push(ordenListRow("Arrastre de nylon", rot.arrastreNylon));
     rRows.push(ordenListRow("Molde fisurado", rot.moldeFisurado));
+    rRows.push(txtRow("Demoras", rot.demoras));
+    rRows.push(txtRow("Mantenimiento", rot.mantenimiento));
+    rRows.push(txtRow("Limpieza", rot.limpieza));
+    rRows.push(txtRow("Comentarios", rot.comentarios));
     sections.push(section("Rotador", rRows));
   }
 
@@ -284,7 +296,7 @@ export function generateEmailHTML(report: Report, settings?: EmailSettings): str
 
   // ── SCRAP ──
   const scrap = report.scrap;
-  if (hd(scrap.cerradoPct) || hd(scrap.parcialPct) || hd(scrap.moldesPendientes)) {
+  if (hasAnyField(scrap as unknown as Record<string, unknown>)) {
     const sRows: string[] = [];
     if (hd(scrap.cerradoPct)) {
       sRows.push(
@@ -305,6 +317,10 @@ export function generateEmailHTML(report: Report, settings?: EmailSettings): str
     sRows.push(
       bigRow("Moldes pendientes a desmoldar", scrap.moldesPendientes, "moldes")
     );
+    sRows.push(txtRow("Demoras", scrap.demoras));
+    sRows.push(txtRow("Mantenimiento", scrap.mantenimiento));
+    sRows.push(txtRow("Limpieza", scrap.limpieza));
+    sRows.push(txtRow("Comentarios", scrap.comentarios));
     sections.push(section("Scrap", sRows, "#dc2626"));
   }
 
@@ -356,16 +372,23 @@ export function generateEmailHTML(report: Report, settings?: EmailSettings): str
   }
 
   // ── AUTOELEVADORES ──
-  if (report.autoelevadores.lista.length > 0) {
+  const auto = report.autoelevadores;
+  if (hasAnyField(auto as unknown as Record<string, unknown>)) {
     const autoRows: string[] = [];
-    autoRows.push(subHeader("Operadores"));
-    for (const item of report.autoelevadores.lista) {
-      if (hd(item.operador)) {
-        autoRows.push(
-          valRow(item.operador, `${item.desdeHora} → ${item.hastaHora}`)
-        );
+    if (auto.lista.length > 0) {
+      autoRows.push(subHeader("Operadores"));
+      for (const item of auto.lista) {
+        if (hd(item.operador)) {
+          autoRows.push(
+            valRow(item.operador, `${item.desdeHora} → ${item.hastaHora}`)
+          );
+        }
       }
     }
+    autoRows.push(txtRow("Demoras", auto.demoras));
+    autoRows.push(txtRow("Mantenimiento", auto.mantenimiento));
+    autoRows.push(txtRow("Limpieza", auto.limpieza));
+    autoRows.push(txtRow("Comentarios", auto.comentarios));
     sections.push(section("Autoelevadores", autoRows));
   }
 

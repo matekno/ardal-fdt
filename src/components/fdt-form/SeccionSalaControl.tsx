@@ -63,7 +63,7 @@ export function SeccionSalaControl() {
       <TextAreaField name="salaControl.demoras" label="Demoras" />
       <TextAreaField name="salaControl.mantenimiento" label="Mantenimiento" />
       <TextAreaField name="salaControl.limpieza" label="Limpieza" />
-      <TextAreaField name="salaControl.otros" label="Otros" />
+      <TextAreaField name="salaControl.otros" label="Comentarios" />
     </SectionCard>
   );
 }

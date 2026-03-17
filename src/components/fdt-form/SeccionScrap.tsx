@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useWatch, useFormContext } from "react-hook-form";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { FormField } from "@/components/ui/FormField";
+import { TextAreaField } from "@/components/ui/TextAreaField";
 
 function yesterday(): string {
   const d = new Date();
@@ -61,6 +62,10 @@ export function SeccionScrap() {
           unit="moldes"
         />
       </div>
+      <TextAreaField name="scrap.demoras" label="Demoras" />
+      <TextAreaField name="scrap.mantenimiento" label="Mantenimiento" />
+      <TextAreaField name="scrap.limpieza" label="Limpieza" />
+      <TextAreaField name="scrap.comentarios" label="Comentarios" />
     </SectionCard>
   );
 }

@@ -133,6 +133,10 @@ export const personalSchema = z.object({
   vacaciones: z.array(z.object({ personal: z.string() })).max(8),
   capacitacion: z.array(capacitacionSchema).max(3),
   otrosComentarios: z.string(),
+  demoras: z.string(),
+  mantenimiento: z.string(),
+  limpieza: z.string(),
+  comentarios: z.string(),
 });
 
 function createMolino3Schema(objetivoRendimientoHora: number) {
@@ -144,6 +148,8 @@ function createMolino3Schema(objetivoRendimientoHora: number) {
     aguaEnUso: z.string(),
     mantenimiento: z.string(),
     limpieza: z.string(),
+    demoras: z.string(),
+    comentarios: z.string(),
   }).superRefine((data, ctx) => {
     const rend = typeof data.rendimientoHora === "number"
       ? data.rendimientoHora
@@ -167,6 +173,8 @@ export const stockBarroSchema = z.object({
   recupero: reqNum,
   comentarios: z.string(),
   demoras: z.string(),
+  mantenimiento: z.string(),
+  limpieza: z.string(),
 });
 
 export const salaControlSchema = z.object({
@@ -207,6 +215,10 @@ export const corteDesmanteladoSchema = z.object({
 export const rotadorSchema = z.object({
   arrastreNylon: z.array(ordenItemSchema).max(5),
   moldeFisurado: z.array(ordenItemSchema).max(5),
+  demoras: z.string(),
+  mantenimiento: z.string(),
+  limpieza: z.string(),
+  comentarios: z.string(),
 });
 
 export const precuradoAutoclavesSchema = z.object({
@@ -260,6 +272,10 @@ export const scrapSchema = z.object({
   fechaScrapCerrado: z.string(),
   parcialPct: reqNum,
   moldesPendientes: optNum,
+  demoras: z.string(),
+  mantenimiento: z.string(),
+  limpieza: z.string(),
+  comentarios: z.string(),
 });
 
 const transformacionSizeSchema = z.object({
@@ -285,6 +301,10 @@ export const transformacionSchema = z.object({
 
 export const autoelevadoresSchema = z.object({
   lista: z.array(autoelevadorItemSchema).max(8),
+  demoras: z.string(),
+  mantenimiento: z.string(),
+  limpieza: z.string(),
+  comentarios: z.string(),
 });
 
 const resumenMantenimientoItemSchema = z.object({
@@ -367,6 +387,10 @@ export function createEmptyReport(): Report {
       vacaciones: [],
       capacitacion: [],
       otrosComentarios: "",
+      demoras: "",
+      mantenimiento: "",
+      limpieza: "",
+      comentarios: "",
     },
     molino3: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -379,6 +403,8 @@ export function createEmptyReport(): Report {
       aguaEnUso: "",
       mantenimiento: "",
       limpieza: "",
+      demoras: "",
+      comentarios: "",
     },
     stockBarro: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -387,6 +413,8 @@ export function createEmptyReport(): Report {
       recupero: null as any,
       comentarios: "",
       demoras: "",
+      mantenimiento: "",
+      limpieza: "",
     },
     salaControl: {
       horaInicio: "",
@@ -426,6 +454,10 @@ export function createEmptyReport(): Report {
     rotador: {
       arrastreNylon: [],
       moldeFisurado: [],
+      demoras: "",
+      mantenimiento: "",
+      limpieza: "",
+      comentarios: "",
     },
     precuradoAutoclaves: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -472,6 +504,10 @@ export function createEmptyReport(): Report {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       parcialPct: null as any,
       moldesPendientes: null,
+      demoras: "",
+      mantenimiento: "",
+      limpieza: "",
+      comentarios: "",
     },
     transformacion: {
       x15: emptySize(),
@@ -483,7 +519,7 @@ export function createEmptyReport(): Report {
       limpieza: "",
       comentarios: "",
     },
-    autoelevadores: { lista: [] },
+    autoelevadores: { lista: [], demoras: "", mantenimiento: "", limpieza: "", comentarios: "" },
     resumenMantenimiento: [],
   };
 }
@@ -494,15 +530,20 @@ export function compilarResumenMantenimiento(
   report: Report
 ): { area: string; texto: string }[] {
   const areas = [
+    { area: "Personal", texto: report.personal.mantenimiento },
     { area: "Molino (3)", texto: report.molino3.mantenimiento },
+    { area: "Stock de Barro", texto: report.stockBarro.mantenimiento },
     { area: "Sala de Colado", texto: report.salaControl.mantenimiento },
     { area: "Maduración", texto: report.maduracion.mantenimiento },
     { area: "Corte / Desmantelado", texto: report.corteDesmantelado.mantenimiento },
+    { area: "Rotador", texto: report.rotador.mantenimiento },
     { area: "Precurado / Autoclaves", texto: report.precuradoAutoclaves.mantenimiento },
     { area: "Caldera", texto: report.caldera.mantenimiento },
     { area: "Desmolde", texto: report.desmolde.mantenimiento },
     { area: "Granallado", texto: report.granallado.mantenimiento },
     { area: "Transformación", texto: report.transformacion.mantenimiento },
+    { area: "Scrap", texto: report.scrap.mantenimiento },
+    { area: "Autoelevadores", texto: report.autoelevadores.mantenimiento },
   ];
 
   return areas
