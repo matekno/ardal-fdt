@@ -71,9 +71,43 @@ AUTH_GOOGLE_SECRET    # Google Cloud Console
 AUTH_ALLOWED_EMAILS   # lista@ardal.com.ar,otra@ardal.com.ar
 ```
 
+## Desarrollo local (modo testeo)
+
+### Requisitos
+- PostgreSQL local (17.x)
+- DB `fdt_ardal` creada y restaurada desde backup
+
+### Setup inicial
+```bash
+createdb -U postgres fdt_ardal
+psql -U postgres -d fdt_ardal -f "D:/Ardal/backups fdt-ardal/db_dump_2026-03-16.sql"
+```
+
+### `.env.development.local`
+Next.js carga este archivo solo en `NODE_ENV=development`, con prioridad sobre `.env`:
+```
+DATABASE_URL="postgresql://postgres@localhost:5432/fdt_ardal"
+```
+`prisma.config.ts` también lo carga (via dotenv con override).
+
+### Qué hace el modo testeo (automático en `npm run dev`)
+- **Colores celestes**: el `@theme` CSS se overridea con `html[data-testmode]` en `globals.css`
+- **Banner**: "MODO TESTEO — Entorno local" en la parte superior (`layout.tsx`)
+- **Emails bloqueados**: `POST /api/reports/emit` salta el SMTP y loguea en consola
+- **DB local**: usa la `DATABASE_URL` de `.env.development.local`
+
+### Sistema de colores
+Los colores de la app usan variables CSS del `@theme inline` de Tailwind CSS 4:
+- `--color-ardal` → clase `bg-ardal`, `text-ardal`, `border-ardal`
+- `--color-ardal-dark` → clase `bg-ardal-dark`, `text-ardal-dark`, etc.
+- `--color-ardal-light` → clase `bg-ardal-light`, `text-ardal-light`, etc.
+
+**NO usar colores hex hardcodeados** (`#ea580c`, etc.) en componentes. Usar siempre las clases theme.
+Excepción: `email-generator.ts` usa hex inline porque genera HTML para email.
+
 ## Convenciones
 - **Idioma**: español (UI, labels, textos)
-- **Color principal**: `#ea580c` (naranja Ardal), dark: `#c2410c`
+- **Color principal**: `#ea580c` (naranja Ardal), dark: `#c2410c` — definido en `globals.css` `@theme inline`
 - **CSS**: Tailwind CSS 4 para la app, inline CSS para el email HTML
 - **Forms**: react-hook-form + zodResolver, auto-save a localStorage cada 30s
 - **Listas dinámicas**: componente DynamicList con useFieldArray
