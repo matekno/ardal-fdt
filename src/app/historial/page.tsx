@@ -88,6 +88,8 @@ export default async function HistorialPage({
       filters={{ turno, supervisor, desde, hasta }}
       supervisores={settings.supervisores}
       turnos={settings.turnos}
+      objetivoMoldesColados={settings.objetivoMoldesColados}
+      objetivoRendimientoHora={settings.objetivoRendimientoHora}
     />
   );
 }
