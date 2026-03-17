@@ -81,24 +81,42 @@ const ordenItemSchema = z.object({
   ),
 });
 
-const ajustadasDetalleSchema = z.object({
-  activo: z.boolean(),
+const ajustadasLineaSchema = z.object({
   signo: z.string(),    // "+" | "-" | ""
   cantidad: optNum,
   medida: z.string(),
+});
+
+const ajustadasBaseSchema = z.object({
+  activo: z.boolean(),
+  lineas: z.array(ajustadasLineaSchema).max(8),
 }).superRefine((data, ctx) => {
   if (data.activo) {
-    if (!data.signo) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requerido", path: ["signo"] });
+    if (data.lineas.length === 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Agregar al menos una línea", path: ["lineas"] });
     }
-    if (data.cantidad === null || data.cantidad === undefined) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requerido", path: ["cantidad"] });
-    }
-    if (!data.medida) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requerido", path: ["medida"] });
-    }
+    data.lineas.forEach((line, i) => {
+      if (!line.signo) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requerido", path: ["lineas", i, "signo"] });
+      if (line.cantidad == null) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requerido", path: ["lineas", i, "cantidad"] });
+      if (!line.medida) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requerido", path: ["lineas", i, "medida"] });
+    });
   }
 });
+
+// Migración: shape viejo { activo, signo, cantidad, medida } → nuevo { activo, lineas: [...] }
+const ajustadasDetalleSchema = z.preprocess((val) => {
+  if (val && typeof val === "object" && !Array.isArray(val)) {
+    const obj = val as Record<string, unknown>;
+    if ("activo" in obj && "signo" in obj && !("lineas" in obj)) {
+      const hasData = obj.signo !== "" || obj.cantidad != null || obj.medida !== "";
+      return {
+        activo: obj.activo,
+        lineas: hasData ? [{ signo: obj.signo, cantidad: obj.cantidad, medida: obj.medida }] : [],
+      };
+    }
+  }
+  return val;
+}, ajustadasBaseSchema);
 
 const autoelevadorItemSchema = z.object({
   operador: z.string(),
@@ -354,7 +372,7 @@ export type Report = z.infer<typeof reportSchema>;
 export type Encabezado = z.infer<typeof encabezadoSchema>;
 export type Personal = z.infer<typeof personalSchema>;
 export type TransformacionSize = z.infer<typeof transformacionSizeSchema>;
-export type AjustadasDetalle = z.infer<typeof ajustadasDetalleSchema>;
+export type AjustadasDetalle = z.infer<typeof ajustadasBaseSchema>;
 export type OrdenItem = z.infer<typeof ordenItemSchema>;
 
 // ── Factory ──
@@ -372,9 +390,7 @@ export function createEmptyReport(): Report {
 
   const emptyAjustadas = (): AjustadasDetalle => ({
     activo: false,
-    signo: "",
-    cantidad: null,
-    medida: "",
+    lineas: [],
   });
 
   return {

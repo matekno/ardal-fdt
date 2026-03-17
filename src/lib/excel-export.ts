@@ -36,9 +36,10 @@ function ordenArr(items: OrdenItem[]): string {
 
 /** Serializa ajustadasDetalleSchema */
 function ajustadas(a: AjustadasDetalle): string {
-  if (!a.activo) return "";
-  const parts = [a.signo, a.cantidad != null ? String(a.cantidad) : "", a.medida].filter(Boolean);
-  return parts.join(" ");
+  if (!a.activo || !a.lineas.length) return "";
+  return a.lineas
+    .map((l) => [l.signo, l.cantidad != null ? String(l.cantidad) : "", l.medida].filter(Boolean).join(" "))
+    .join(" / ");
 }
 
 // ── Flatten de un reporte a fila plana ──

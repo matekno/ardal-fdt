@@ -274,13 +274,15 @@ export function generateEmailHTML(report: Report, settings?: EmailSettings): str
     desRows.push(ordenListRow("Dintel desmoldado", des.dintelDesmoldado));
     desRows.push(ordenListRow("Falla en aspiración", des.fallaAspiracion));
     desRows.push(ordenListRow("Fuera de medida", des.fueraMedida));
-    if (des.ajustadas1era.activo) {
-      const a = des.ajustadas1era;
-      desRows.push(ajustadasRow("Ajustadas 1era", a.signo, a.cantidad, a.medida));
+    if (des.ajustadas1era.activo && des.ajustadas1era.lineas.length > 0) {
+      for (const linea of des.ajustadas1era.lineas) {
+        desRows.push(ajustadasRow("Ajustadas 1era", linea.signo, linea.cantidad, linea.medida));
+      }
     }
-    if (des.ajustadasReproceso.activo) {
-      const a = des.ajustadasReproceso;
-      desRows.push(ajustadasRow("Ajustadas reproceso", a.signo, a.cantidad, a.medida));
+    if (des.ajustadasReproceso.activo && des.ajustadasReproceso.lineas.length > 0) {
+      for (const linea of des.ajustadasReproceso.lineas) {
+        desRows.push(ajustadasRow("Ajustadas reproceso", linea.signo, linea.cantidad, linea.medida));
+      }
     }
     desRows.push(txtRow("Demoras", des.demoras));
     desRows.push(txtRow("Mantenimiento", des.mantenimiento));
