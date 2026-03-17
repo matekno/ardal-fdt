@@ -23,10 +23,13 @@ Que esta aplicación sea un faro de excelencia y un ejemplo de lo que la mejora 
 
 ## Comandos
 ```bash
-npm run dev      # Dev server en localhost:3000
+npm run dev      # Dev server en localhost:3000 — LO CORRE EL USUARIO, no Claude
 npm run build    # Build de producción
 npm run lint     # ESLint
 ```
+
+## Dev server
+**No usar `preview_start` ni arrancar `npm run dev` desde Claude.** El usuario lo corre manualmente. Para verificar cambios, usar `npm run build` (detecta errores de TypeScript). No es necesario un servidor corriendo para validar el trabajo.
 
 ## Estructura
 ```
