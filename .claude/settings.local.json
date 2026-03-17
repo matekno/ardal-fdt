@@ -22,7 +22,15 @@
       "Bash(npx prisma db push)",
       "Bash(npx tsx --version)",
       "Bash(node -e \":*)",
-      "Bash(npx prisma db seed)"
+      "Bash(npx prisma db seed)",
+      "Bash(npx prisma:*)",
+      "Bash(node scripts/check-db.mjs)",
+      "Bash(node scripts/prepare-prod.mjs --dry-run)",
+      "Bash(gh issue:*)",
+      "Bash(psql -U postgres -d fdt_ardal -f \"D:/Ardal/backups fdt-ardal/db_dump_2026-03-16.sql\")",
+      "Bash(psql -U postgres -d fdt_ardal -c \"SELECT count\\(*\\) as reports FROM \"\"Report\"\"; SELECT count\\(*\\) as settings FROM \"\"Setting\"\";\")",
+      "Bash(psql -U postgres -d fdt_ardal -c \"SELECT 1\")",
+      "Bash(taskkill //F //IM node.exe)"
     ]
   }
 }
