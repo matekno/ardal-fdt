@@ -5,6 +5,7 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { FormField } from "@/components/ui/FormField";
 import { TextAreaField } from "@/components/ui/TextAreaField";
 import { SelectField } from "@/components/ui/SelectField";
+import { ComboboxField } from "@/components/ui/ComboboxField";
 import { DynamicList } from "@/components/ui/DynamicList";
 import { useSettings } from "@/contexts/SettingsContext";
 
@@ -41,11 +42,10 @@ export function SeccionPersonal() {
           newItem={() => ({ nombre: "", motivo: "" })}
           renderItem={(index) => (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <SelectField
+              <ComboboxField
                 name={`personal.ausentes.${index}.nombre`}
                 label="Personal"
                 options={operarios}
-                placeholder="Seleccionar..."
               />
               <SelectField
                 name={`personal.ausentes.${index}.motivo`}
@@ -74,11 +74,10 @@ export function SeccionPersonal() {
           newItem={() => ({ personal: "", puesto: "" })}
           renderItem={(index) => (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <SelectField
+              <ComboboxField
                 name={`personal.cambiosPuesto.${index}.personal`}
                 label="Personal"
                 options={operarios}
-                placeholder="Seleccionar..."
               />
               <SelectField
                 name={`personal.cambiosPuesto.${index}.puesto`}
@@ -100,11 +99,10 @@ export function SeccionPersonal() {
           newItem={() => ({ personal: "", desdeHora: "", hastaHora: "" })}
           renderItem={(index) => (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-              <SelectField
+              <ComboboxField
                 name={`personal.horasExtras.${index}.personal`}
                 label="Personal"
                 options={operarios}
-                placeholder="Seleccionar..."
               />
               <FormField
                 name={`personal.horasExtras.${index}.desdeHora`}
@@ -128,11 +126,10 @@ export function SeccionPersonal() {
           newItem={() => ({ personal: "", motivo: "" })}
           renderItem={(index) => (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <SelectField
+              <ComboboxField
                 name={`personal.permisos.${index}.personal`}
                 label="Personal"
                 options={operarios}
-                placeholder="Seleccionar..."
               />
               <FormField
                 name={`personal.permisos.${index}.motivo`}
@@ -158,11 +155,10 @@ export function SeccionPersonal() {
             newItem={() => ({ personal: "", desdeHora: "", hastaHora: "" })}
             renderItem={(index) => (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                <SelectField
+                <ComboboxField
                   name={`personal.devolucionHoras.lista.${index}.personal`}
                   label="Personal"
                   options={operarios}
-                  placeholder="Seleccionar..."
                 />
                 <FormField
                   name={`personal.devolucionHoras.lista.${index}.desdeHora`}
@@ -193,11 +189,10 @@ export function SeccionPersonal() {
             newItem={() => ({ personal: "", puesto: "" })}
             renderItem={(index) => (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <SelectField
+                <ComboboxField
                   name={`personal.personalNuevo.lista.${index}.personal`}
                   label="Personal"
                   options={operarios}
-                  placeholder="Seleccionar..."
                 />
                 <SelectField
                   name={`personal.personalNuevo.lista.${index}.puesto`}
@@ -219,11 +214,10 @@ export function SeccionPersonal() {
           label="Vacaciones"
           newItem={() => ({ personal: "" })}
           renderItem={(index) => (
-            <SelectField
+            <ComboboxField
               name={`personal.vacaciones.${index}.personal`}
               label="Personal"
               options={operarios}
-              placeholder="Seleccionar..."
             />
           )}
         />
@@ -238,11 +232,10 @@ export function SeccionPersonal() {
           newItem={() => ({ personal: "", capacitacion: "" })}
           renderItem={(index) => (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <SelectField
+              <ComboboxField
                 name={`personal.capacitacion.${index}.personal`}
                 label="Personal"
                 options={operarios}
-                placeholder="Seleccionar..."
               />
               <FormField
                 name={`personal.capacitacion.${index}.capacitacion`}
@@ -262,17 +255,15 @@ export function SeccionPersonal() {
           newItem={() => ({ reemplazado: "", reemplazante: "", comentario: "" })}
           renderItem={(index) => (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-              <SelectField
+              <ComboboxField
                 name={`personal.reemplazos.${index}.reemplazado`}
                 label="Reemplazado"
                 options={operarios}
-                placeholder="Seleccionar..."
               />
-              <SelectField
+              <ComboboxField
                 name={`personal.reemplazos.${index}.reemplazante`}
                 label="Reemplazante"
                 options={operarios}
-                placeholder="Seleccionar..."
               />
               <FormField
                 name={`personal.reemplazos.${index}.comentario`}
