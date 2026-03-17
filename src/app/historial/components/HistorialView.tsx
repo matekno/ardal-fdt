@@ -6,7 +6,6 @@ import {
   ArrowLeft, ArrowRight, ClockCounterClockwise, X, Warning,
   CheckCircle, Envelope, ArrowLineDown,
 } from "@phosphor-icons/react";
-import { OBJETIVO_MOLDES_COLADOS, OBJETIVO_RENDIMIENTO_HORA } from "@/lib/constants";
 import { generateEmailHTML } from "@/lib/email-generator";
 import { compilarResumenMantenimiento } from "@/lib/schema";
 import type { Report } from "@/lib/schema";
@@ -54,6 +53,8 @@ type Props = {
   filters: Filters;
   supervisores: string[];
   turnos: string[];
+  objetivoMoldesColados: number;
+  objetivoRendimientoHora: number;
 };
 
 function n(val: number | null | undefined, decimals = 0): string {
@@ -82,7 +83,7 @@ function buildExportUrl(filters: Filters): string {
   return `/api/reports/export${s ? `?${s}` : ""}`;
 }
 
-export function HistorialView({ reports, total, page, limit, filters, supervisores, turnos }: Props) {
+export function HistorialView({ reports, total, page, limit, filters, supervisores, turnos, objetivoMoldesColados, objetivoRendimientoHora }: Props) {
   const [drawerReport, setDrawerReport] = useState<ReportRow | null>(null);
   const [drawerHTML, setDrawerHTML] = useState<string | null>(null);
   const [drawerLoading, setDrawerLoading] = useState(false);
@@ -120,7 +121,7 @@ export function HistorialView({ reports, total, page, limit, filters, supervisor
       <header className="bg-zinc-950 border-b border-zinc-800 px-4 md:px-6 py-3 sticky top-0 z-20">
         <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="w-2 h-2 rounded-full bg-[#ea580c] shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-ardal shrink-0" />
             <span className="text-white font-bold text-sm tracking-tight">FDT</span>
             <span className="text-zinc-500 text-xs hidden sm:inline">Historial</span>
           </div>
@@ -165,7 +166,7 @@ export function HistorialView({ reports, total, page, limit, filters, supervisor
               type="date"
               name="desde"
               defaultValue={filters.desde || ""}
-              className="text-xs px-2.5 py-1.5 border border-zinc-200 rounded bg-white text-zinc-800 focus:outline-none focus:border-[#ea580c]"
+              className="text-xs px-2.5 py-1.5 border border-zinc-200 rounded bg-white text-zinc-800 focus:outline-none focus:border-ardal"
             />
           </div>
           <div>
@@ -176,7 +177,7 @@ export function HistorialView({ reports, total, page, limit, filters, supervisor
               type="date"
               name="hasta"
               defaultValue={filters.hasta || ""}
-              className="text-xs px-2.5 py-1.5 border border-zinc-200 rounded bg-white text-zinc-800 focus:outline-none focus:border-[#ea580c]"
+              className="text-xs px-2.5 py-1.5 border border-zinc-200 rounded bg-white text-zinc-800 focus:outline-none focus:border-ardal"
             />
           </div>
           <div>
@@ -186,7 +187,7 @@ export function HistorialView({ reports, total, page, limit, filters, supervisor
             <select
               name="turno"
               defaultValue={filters.turno || ""}
-              className="text-xs px-2.5 py-1.5 border border-zinc-200 rounded bg-white text-zinc-800 focus:outline-none focus:border-[#ea580c]"
+              className="text-xs px-2.5 py-1.5 border border-zinc-200 rounded bg-white text-zinc-800 focus:outline-none focus:border-ardal"
             >
               <option value="">Todos</option>
               {turnos.map((t) => (
@@ -201,7 +202,7 @@ export function HistorialView({ reports, total, page, limit, filters, supervisor
             <select
               name="supervisor"
               defaultValue={filters.supervisor || ""}
-              className="text-xs px-2.5 py-1.5 border border-zinc-200 rounded bg-white text-zinc-800 focus:outline-none focus:border-[#ea580c]"
+              className="text-xs px-2.5 py-1.5 border border-zinc-200 rounded bg-white text-zinc-800 focus:outline-none focus:border-ardal"
             >
               <option value="">Todos</option>
               {supervisores.map((s) => (
@@ -211,7 +212,7 @@ export function HistorialView({ reports, total, page, limit, filters, supervisor
           </div>
           <button
             type="submit"
-            className="px-3 py-1.5 bg-[#ea580c] text-white text-xs font-medium rounded hover:bg-[#c2410c]"
+            className="px-3 py-1.5 bg-ardal text-white text-xs font-medium rounded hover:bg-ardal-dark"
             style={{ transition: "background 0.15s var(--ease-spring)" }}
           >
             Filtrar
@@ -232,7 +233,7 @@ export function HistorialView({ reports, total, page, limit, filters, supervisor
 
         {/* Charts (collapsible) */}
         {showCharts && reports.length > 0 && (
-          <ProductionCharts reports={reports} />
+          <ProductionCharts reports={reports} objetivoMoldesColados={objetivoMoldesColados} objetivoRendimientoHora={objetivoRendimientoHora} />
         )}
 
         {/* Table */}
@@ -316,8 +317,8 @@ export function HistorialView({ reports, total, page, limit, filters, supervisor
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
                   {reports.map((row) => {
-                    const molajesBajo = row.salaControlMoldesColados < OBJETIVO_MOLDES_COLADOS;
-                    const rendBajo = row.molino3RendimientoHora < OBJETIVO_RENDIMIENTO_HORA;
+                    const molajesBajo = row.salaControlMoldesColados < objetivoMoldesColados;
+                    const rendBajo = row.molino3RendimientoHora < objetivoRendimientoHora;
                     return (
                       <tr
                         key={row.id}
@@ -337,11 +338,11 @@ export function HistorialView({ reports, total, page, limit, filters, supervisor
                           {row.supervisor.split(" - ").slice(1).join(" - ") || row.supervisor}
                         </td>
                         {/* Colados */}
-                        <td className={`px-3 py-2 text-right tabular-nums font-mono ${molajesBajo ? "text-[#ea580c] font-semibold" : "text-zinc-700"}`}>
+                        <td className={`px-3 py-2 text-right tabular-nums font-mono ${molajesBajo ? "text-ardal font-semibold" : "text-zinc-700"}`}>
                           {n(row.salaControlMoldesColados)}
                         </td>
                         {/* Molino */}
-                        <td className={`px-3 py-2 text-right tabular-nums font-mono ${rendBajo ? "text-[#ea580c] font-semibold" : "text-zinc-700"}`}>
+                        <td className={`px-3 py-2 text-right tabular-nums font-mono ${rendBajo ? "text-ardal font-semibold" : "text-zinc-700"}`}>
                           {n(row.molino3RendimientoHora, 1)}
                         </td>
                         <td className="px-3 py-2 text-right tabular-nums font-mono text-zinc-700">
