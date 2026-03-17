@@ -274,15 +274,22 @@ export function generateEmailHTML(report: Report, settings?: EmailSettings): str
     desRows.push(ordenListRow("Dintel desmoldado", des.dintelDesmoldado));
     desRows.push(ordenListRow("Falla en aspiración", des.fallaAspiracion));
     desRows.push(ordenListRow("Fuera de medida", des.fueraMedida));
-    if (des.ajustadas1era.activo && des.ajustadas1era.lineas.length > 0) {
+    if (des.ajustadas1era.activo && des.ajustadas1era.lineas?.length > 0) {
       for (const linea of des.ajustadas1era.lineas) {
         desRows.push(ajustadasRow("Ajustadas 1era", linea.signo, linea.cantidad, linea.medida));
       }
+    } else if (des.ajustadas1era.activo && "signo" in des.ajustadas1era) {
+      // Old format: { activo, signo, cantidad, medida } — sin lineas
+      const old = des.ajustadas1era as unknown as { signo: string; cantidad: number | null; medida: string };
+      desRows.push(ajustadasRow("Ajustadas 1era", old.signo, old.cantidad, old.medida));
     }
-    if (des.ajustadasReproceso.activo && des.ajustadasReproceso.lineas.length > 0) {
+    if (des.ajustadasReproceso.activo && des.ajustadasReproceso.lineas?.length > 0) {
       for (const linea of des.ajustadasReproceso.lineas) {
         desRows.push(ajustadasRow("Ajustadas reproceso", linea.signo, linea.cantidad, linea.medida));
       }
+    } else if (des.ajustadasReproceso.activo && "signo" in des.ajustadasReproceso) {
+      const old = des.ajustadasReproceso as unknown as { signo: string; cantidad: number | null; medida: string };
+      desRows.push(ajustadasRow("Ajustadas reproceso", old.signo, old.cantidad, old.medida));
     }
     desRows.push(txtRow("Demoras", des.demoras));
     desRows.push(txtRow("Mantenimiento", des.mantenimiento));

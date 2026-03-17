@@ -105,4 +105,11 @@ Excepción: `email-generator.ts` usa hex inline porque genera HTML para email.
 - **Secciones vacías**: se omiten en el email (hasAnyField pattern)
 - **Resumen mantenimiento**: se compila automáticamente al generar email
 
+## Retrocompatibilidad de datos
+**OBLIGATORIO leer `docs/backward-compat.md` antes de planificar o implementar cambios que:**
+- Modifiquen la shape de un campo existente en `schema.ts`
+- Agreguen campos requeridos a schemas existentes
+- Cambien el formato de datos en `createEmptyReport()`
+- Toquen `email-generator.ts`, `report-metrics.ts` o `excel-export.ts`
+
 
