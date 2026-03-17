@@ -91,6 +91,13 @@ export function generateEmailHTML(report: Report, settings?: EmailSettings): str
       pRows.push(valRow("Capacitación", `${c.personal}${cap}`));
     }
   }
+  if (p.reemplazos && p.reemplazos.length > 0) {
+    pRows.push(subHeader("Reemplazos"));
+    for (const r of p.reemplazos) {
+      const comentario = r.comentario ? `: ${r.comentario}` : "";
+      pRows.push(valRow(r.reemplazado, `→ ${r.reemplazante}${comentario}`));
+    }
+  }
   pRows.push(txtRow("Otros comentarios", p.otrosComentarios));
   pRows.push(txtRow("Demoras", p.demoras));
   pRows.push(txtRow("Mantenimiento", p.mantenimiento));

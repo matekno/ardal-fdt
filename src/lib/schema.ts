@@ -63,6 +63,12 @@ const capacitacionSchema = z.object({
   capacitacion: z.string(),
 });
 
+const reemplazoSchema = z.object({
+  reemplazado: z.string(),
+  reemplazante: z.string(),
+  comentario: z.string(),
+});
+
 // Nro de torta/molde (compartido por todos los campos "orden")
 const ordenItemSchema = z.object({
   valor: z.preprocess(
@@ -132,6 +138,7 @@ export const personalSchema = z.object({
   }),
   vacaciones: z.array(z.object({ personal: z.string() })).max(8),
   capacitacion: z.array(capacitacionSchema).max(3),
+  reemplazos: z.array(reemplazoSchema).max(5),
   otrosComentarios: z.string(),
   demoras: z.string(),
   mantenimiento: z.string(),
@@ -386,6 +393,7 @@ export function createEmptyReport(): Report {
       personalNuevo: { cantidad: null, lista: [] },
       vacaciones: [],
       capacitacion: [],
+      reemplazos: [],
       otrosComentarios: "",
       demoras: "",
       mantenimiento: "",

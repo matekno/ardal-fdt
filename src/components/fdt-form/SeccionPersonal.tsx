@@ -253,6 +253,36 @@ export function SeccionPersonal() {
         />
       </div>
 
+      {/* ── Reemplazos ── */}
+      <div className="border-t pt-4 mt-2">
+        <DynamicList
+          name="personal.reemplazos"
+          maxItems={5}
+          label="Reemplazo"
+          newItem={() => ({ reemplazado: "", reemplazante: "", comentario: "" })}
+          renderItem={(index) => (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <SelectField
+                name={`personal.reemplazos.${index}.reemplazado`}
+                label="Reemplazado"
+                options={operarios}
+                placeholder="Seleccionar..."
+              />
+              <SelectField
+                name={`personal.reemplazos.${index}.reemplazante`}
+                label="Reemplazante"
+                options={operarios}
+                placeholder="Seleccionar..."
+              />
+              <FormField
+                name={`personal.reemplazos.${index}.comentario`}
+                label="Comentario"
+              />
+            </div>
+          )}
+        />
+      </div>
+
       {/* ── Otros comentarios ── */}
       <div className="border-t pt-4 mt-2">
         <TextAreaField
