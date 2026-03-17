@@ -26,28 +26,36 @@ export function AjustadasField({ name, label }: AjustadasFieldProps) {
       <CheckboxField name={`${name}.activo`} label={label} />
       {activo && (
         <div className="pl-6 space-y-2">
+          {fields.length > 0 && (
+            <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-2">
+              <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em]">Signo</span>
+              <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em]">Cantidad</span>
+              <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em]">Medida</span>
+              <span />
+            </div>
+          )}
           {fields.map((field, index) => (
-            <div key={field.id} className="grid grid-cols-[auto_1fr_1fr_auto] gap-2 items-end">
+            <div key={field.id} className="grid grid-cols-[auto_1fr_1fr_auto] gap-2 items-start">
               <SelectField
                 name={`${name}.lineas.${index}.signo`}
-                label={index === 0 ? "Signo" : ""}
+                label=""
                 options={SIGNOS}
                 placeholder="+ / -"
               />
               <FormField
                 name={`${name}.lineas.${index}.cantidad`}
-                label={index === 0 ? "Cantidad" : ""}
+                label=""
                 type="number"
               />
               <FormField
                 name={`${name}.lineas.${index}.medida`}
-                label={index === 0 ? "Medida" : ""}
+                label=""
                 placeholder="ej: 15cm"
               />
               <button
                 type="button"
                 onClick={() => remove(index)}
-                className="mb-[2px] p-1.5 text-zinc-400 hover:text-red-500 rounded transition-colors"
+                className="p-1.5 text-zinc-400 hover:text-red-500 rounded transition-colors"
                 style={{ transition: "color 0.15s var(--ease-spring)" }}
               >
                 <X size={14} weight="bold" />

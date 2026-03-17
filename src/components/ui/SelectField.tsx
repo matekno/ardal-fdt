@@ -22,10 +22,12 @@ export function SelectField({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em]">
-        {label}
-        {required && <span className="text-[#ea580c] ml-0.5">*</span>}
-      </label>
+      {label && (
+        <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em]">
+          {label}
+          {required && <span className="text-ardal ml-0.5">*</span>}
+        </label>
+      )}
       <select
         {...register(name)}
         className={error ? "border-red-400 bg-red-50" : ""}
