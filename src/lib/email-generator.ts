@@ -286,13 +286,15 @@ export function generateEmailHTML(report: Report, settings?: EmailSettings): str
   const scrap = report.scrap;
   if (hd(scrap.cerradoPct) || hd(scrap.parcialPct) || hd(scrap.moldesPendientes)) {
     const sRows: string[] = [];
-    if (hd(scrap.cerradoPct))
+    if (hd(scrap.cerradoPct)) {
       sRows.push(
         bigRow(
           "Scrap cerrado (desmolde completo)",
           fmtPct(scrap.cerradoPct)
         )
       );
+      sRows.push(txtRow("Fecha scrap cerrado", scrap.fechaScrapCerrado));
+    }
     if (hd(scrap.parcialPct))
       sRows.push(
         bigRow(

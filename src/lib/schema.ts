@@ -257,6 +257,7 @@ export const granalladoSchema = z.object({
 
 export const scrapSchema = z.object({
   cerradoPct: optNum,
+  fechaScrapCerrado: z.string(),
   parcialPct: reqNum,
   moldesPendientes: optNum,
 });
@@ -467,6 +468,7 @@ export function createEmptyReport(): Report {
     },
     scrap: {
       cerradoPct: null,
+      fechaScrapCerrado: "",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       parcialPct: null as any,
       moldesPendientes: null,
