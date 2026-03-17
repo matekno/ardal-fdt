@@ -5,7 +5,11 @@
 import type { Report, OrdenItem } from "./schema";
 import { OBJETIVO_MOLDES_COLADOS, OBJETIVO_RENDIMIENTO_HORA } from "./constants";
 
-export function generateEmailHTML(report: Report): string {
+type EmailSettings = { objetivoMoldesColados?: number; objetivoRendimientoHora?: number };
+
+export function generateEmailHTML(report: Report, settings?: EmailSettings): string {
+  const objMoldes = settings?.objetivoMoldesColados ?? OBJETIVO_MOLDES_COLADOS;
+  const objRend = settings?.objetivoRendimientoHora ?? OBJETIVO_RENDIMIENTO_HORA;
   const turnoShort = report.encabezado.turno.replace("TURNO ", "");
   const sections: string[] = [];
 
@@ -110,14 +114,14 @@ export function generateEmailHTML(report: Report): string {
       mRows.push(bigRow("Horas de marcha", m3.horasMarcha, "HS"));
       if (hd(m3.rendimientoHora)) {
         const rend = m3.rendimientoHora as number;
-        const rendColor = rend >= OBJETIVO_RENDIMIENTO_HORA ? "#16a34a" : "#dc2626";
+        const rendColor = rend >= objRend ? "#16a34a" : "#dc2626";
         mRows.push(bigRow("Rendimiento / hora", rend, "CM", rendColor));
         mRows.push(
           objectiveRow(
             "Objetivo rendimiento",
-            OBJETIVO_RENDIMIENTO_HORA,
+            objRend,
             "CM",
-            rend >= OBJETIVO_RENDIMIENTO_HORA
+            rend >= objRend
           )
         );
       }
@@ -146,17 +150,17 @@ export function generateEmailHTML(report: Report): string {
     scRows.push(valRow("Hora de inicio", sc.horaInicio));
     if (hd(sc.moldesColados)) {
       const moldes = sc.moldesColados as number;
-      const cumpleMoldes = moldes >= OBJETIVO_MOLDES_COLADOS;
+      const cumpleMoldes = moldes >= objMoldes;
       const moldesColor = cumpleMoldes ? "#16a34a" : "#dc2626";
       scRows.push(bigRow("Moldes colados", moldes, "UN", moldesColor));
       scRows.push(
-        objectiveRow("Objetivo moldes", OBJETIVO_MOLDES_COLADOS, "UN", cumpleMoldes)
+        objectiveRow("Objetivo moldes", objMoldes, "UN", cumpleMoldes)
       );
       if (!cumpleMoldes) {
         scRows.push(
           desvioRow(
             "Desvío vs objetivo",
-            moldes - OBJETIVO_MOLDES_COLADOS,
+            moldes - objMoldes,
             "moldes"
           )
         );

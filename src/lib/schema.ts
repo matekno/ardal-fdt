@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { OBJETIVO_RENDIMIENTO_HORA } from "./constants";
 
 // ── Helpers ──
 
@@ -134,28 +135,32 @@ export const personalSchema = z.object({
   otrosComentarios: z.string(),
 });
 
-export const molino3Schema = z.object({
-  horasMarcha: reqNum.pipe(z.number().max(8, "Máximo 8 HS")),
-  rendimientoHora: reqNum,
-  cuerposMoliendaKG: reqNum,
-  causaBajoRendimiento: z.string(),
-  aguaEnUso: z.string(),
-  mantenimiento: z.string(),
-  limpieza: z.string(),
-}).superRefine((data, ctx) => {
-  const rend = typeof data.rendimientoHora === "number"
-    ? data.rendimientoHora
-    : Number(data.rendimientoHora);
-  if (!isNaN(rend) && rend < 50) {
-    if (!data.causaBajoRendimiento || !data.causaBajoRendimiento.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Obligatorio cuando el rendimiento es menor a 50 CM",
-        path: ["causaBajoRendimiento"],
-      });
+function createMolino3Schema(objetivoRendimientoHora: number) {
+  return z.object({
+    horasMarcha: reqNum.pipe(z.number().max(8, "Máximo 8 HS")),
+    rendimientoHora: reqNum,
+    cuerposMoliendaKG: reqNum,
+    causaBajoRendimiento: z.string(),
+    aguaEnUso: z.string(),
+    mantenimiento: z.string(),
+    limpieza: z.string(),
+  }).superRefine((data, ctx) => {
+    const rend = typeof data.rendimientoHora === "number"
+      ? data.rendimientoHora
+      : Number(data.rendimientoHora);
+    if (!isNaN(rend) && rend < objetivoRendimientoHora) {
+      if (!data.causaBajoRendimiento || !data.causaBajoRendimiento.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Obligatorio cuando el rendimiento es menor a ${objetivoRendimientoHora} CM`,
+          path: ["causaBajoRendimiento"],
+        });
+      }
     }
-  }
-});
+  });
+}
+
+export const molino3Schema = createMolino3Schema(OBJETIVO_RENDIMIENTO_HORA);
 
 export const stockBarroSchema = z.object({
   arena: reqNum,
@@ -307,6 +312,13 @@ export const reportSchema = z.object({
   autoelevadores: autoelevadoresSchema,
   resumenMantenimiento: z.array(resumenMantenimientoItemSchema),
 });
+
+// ── Schema dinámico (threshold desde settings) ──
+
+export function createReportSchema(settings: { objetivoRendimientoHora: number }): z.ZodType<Report> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return z.object({ ...(reportSchema.shape as any), molino3: createMolino3Schema(settings.objetivoRendimientoHora) }) as unknown as z.ZodType<Report>;
+}
 
 // ── Tipos derivados ──
 
