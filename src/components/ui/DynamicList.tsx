@@ -58,7 +58,7 @@ export function DynamicList({
         type="button"
         onClick={() => append(newItem())}
         disabled={fields.length >= maxItems}
-        className="flex items-center gap-1.5 text-[12px] font-medium text-[#ea580c] hover:text-[#c2410c] disabled:opacity-40 disabled:cursor-not-allowed py-1"
+        className="flex items-center gap-1.5 text-[12px] font-medium text-ardal hover:text-ardal-dark disabled:opacity-40 disabled:cursor-not-allowed py-1"
         style={{ transition: "color 0.15s var(--ease-spring)" }}
       >
         <Plus size={12} weight="bold" />

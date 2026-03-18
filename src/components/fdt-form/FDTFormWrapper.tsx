@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm, FormProvider, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  reportSchema,
+  createReportSchema,
   createEmptyReport,
   compilarResumenMantenimiento,
   encabezadoSchema,
@@ -156,9 +156,11 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
   const [emitStepIndex, setEmitStepIndex] = useState(0);
   const [showRequiredPanel, setShowRequiredPanel] = useState(false);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const schema = useMemo(() => createReportSchema(settings) as any, [settings.objetivoRendimientoHora]);
   const methods = useForm<Report>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(reportSchema) as any,
+    resolver: zodResolver(schema) as any,
     defaultValues: createEmptyReport(),
     mode: "onBlur",
   });
@@ -231,7 +233,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
       return;
     }
 
-    const parsed = reportSchema.safeParse(raw);
+    const parsed = schema.safeParse(raw);
     if (!parsed.success) {
       setViewMode("form");
       setShowRequiredPanel(true);
@@ -239,8 +241,10 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
       return;
     }
 
+    // Si estamos en el panel, volver al form antes de mostrar el modal
+    setViewMode("form");
     setEmitState("confirming");
-  }, [methods]);
+  }, [methods, schema]);
 
   // Execute the emit: save to DB + send email
   const onEmitConfirm = useCallback(async () => {
@@ -249,7 +253,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
     setEmitStepIndex(0);
 
     const raw = methods.getValues();
-    const parsed = reportSchema.safeParse(raw);
+    const parsed = schema.safeParse(raw);
     if (!parsed.success) {
       setEmitState("error");
       setEmitError("El formulario tiene errores de validación.");
@@ -306,7 +310,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
       setEmitState("error");
       setEmitError("Error de conexión. Verificá tu red e intentá de nuevo.");
     }
-  }, [methods]);
+  }, [methods, schema]);
 
   const onClearDraft = () => {
     localStorage.removeItem(DRAFT_KEY);
@@ -377,7 +381,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
       <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
         {/* Brand + context */}
         <div className="flex items-center gap-3 min-w-0">
-          <span className="w-2 h-2 rounded-full bg-[#ea580c] shrink-0" />
+          <span className="w-2 h-2 rounded-full bg-ardal shrink-0" />
           <span className="text-white font-bold text-sm tracking-tight shrink-0">
             FDT
           </span>
@@ -410,13 +414,15 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
             </span>
           )}
 
-          {/* Progress counter */}
+          {/* Secciones con novedades */}
           {!isEmitted && (
-            <span className="text-xs font-mono tabular-nums text-zinc-500">
-              <span className="text-white">
-                {filledCount + (encabezadoFilled ? 1 : 0)}
+            <span className="text-[11px] tabular-nums text-zinc-500 hidden sm:inline">
+              <span className="text-white font-semibold">{filledCount}</span>
+              <span className="text-zinc-600">
+                {" / "}
+                {sectionKeys.length}
               </span>
-              <span className="text-zinc-700">/{TABS.length}</span>
+              <span className="text-zinc-500"> secciones con novedades</span>
             </span>
           )}
 
@@ -436,7 +442,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
               <ListChecks size={12} />
               <span className="hidden sm:inline">Verificar</span>
               {incompleteCount > 0 && (
-                <span className="px-1 py-0.5 text-[10px] font-bold bg-[#ea580c] text-white rounded leading-none">
+                <span className="px-1 py-0.5 text-[10px] font-bold bg-ardal text-white rounded leading-none">
                   {incompleteCount}
                 </span>
               )}
@@ -559,7 +565,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
                         ) : isActive ? (
                           <SpinnerGap
                             size={18}
-                            className="text-[#ea580c] animate-spin"
+                            className="text-ardal animate-spin"
                           />
                         ) : (
                           <Circle size={18} className="text-zinc-300" />
@@ -599,7 +605,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
                         setEmitState("confirming");
                         setEmitError(null);
                       }}
-                      className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-[#ea580c] text-white rounded hover:bg-[#c2410c]"
+                      className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-ardal text-white rounded hover:bg-ardal-dark"
                       style={{ transition: "all 0.15s var(--ease-spring)" }}
                     >
                       Reintentar
@@ -627,7 +633,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
 
   // ─── Success / Locked view ────────────────────────────────────────────────────
   if (emitState === "success" || emitState === "locked") {
-    const emailHTML = generateEmailHTML(methods.getValues() as Report);
+    const emailHTML = generateEmailHTML(methods.getValues() as Report, settings);
     return (
       <SettingsProvider settings={settings}>
         <div className="min-h-[100dvh] bg-zinc-50 flex flex-col">
@@ -691,7 +697,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
                 className={`w-full flex items-center justify-between px-5 py-4 border rounded-md text-left ${
                   encabezadoFilled
                     ? "border-emerald-200 bg-emerald-50/50 hover:border-emerald-300"
-                    : "border-[#ea580c]/40 bg-[#ea580c]/[0.03] hover:border-[#ea580c]/70"
+                    : "border-ardal/40 bg-ardal/[0.03] hover:border-ardal/70"
                 } active:scale-[0.99]`}
                 style={{ transition: "all 0.15s var(--ease-spring)" }}
               >
@@ -699,7 +705,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
                   <Notepad
                     size={20}
                     className={
-                      encabezadoFilled ? "text-emerald-500" : "text-[#ea580c]"
+                      encabezadoFilled ? "text-emerald-500" : "text-ardal"
                     }
                   />
                   <div>
@@ -720,7 +726,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
                     weight="fill"
                   />
                 ) : (
-                  <ArrowRight size={16} className="text-[#ea580c] shrink-0" />
+                  <ArrowRight size={16} className="text-ardal shrink-0" />
                 )}
               </button>
             </div>
@@ -754,7 +760,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
                       }}
                       className={`relative flex flex-col gap-3 p-4 border rounded-md text-left ${
                         hasFilled
-                          ? "border-[#ea580c]/30 bg-[#ea580c]/[0.03] hover:border-[#ea580c]/50"
+                          ? "border-ardal/30 bg-ardal/[0.03] hover:border-ardal/50"
                           : "border-zinc-200 bg-white hover:border-zinc-300"
                       } active:scale-[0.97]`}
                       style={{ transition: "all 0.15s var(--ease-spring)" }}
@@ -763,7 +769,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
                         <Icon
                           size={18}
                           className={
-                            hasFilled ? "text-[#ea580c]" : "text-zinc-300"
+                            hasFilled ? "text-ardal" : "text-zinc-300"
                           }
                         />
                         {hasFilled && (
@@ -784,7 +790,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
               <div className="flex justify-end pt-2 border-t border-zinc-200">
                 <button
                   onClick={onEmit}
-                  className="flex items-center gap-1.5 px-5 py-2.5 text-sm font-medium bg-[#ea580c] text-white rounded hover:bg-[#c2410c] active:scale-[0.98] active:translate-y-[1px]"
+                  className="flex items-center gap-1.5 px-5 py-2.5 text-sm font-medium bg-ardal text-white rounded hover:bg-ardal-dark active:scale-[0.98] active:translate-y-[1px]"
                   style={{ transition: "all 0.15s var(--ease-spring)" }}
                 >
                   <PaperPlaneTilt size={14} />
@@ -830,7 +836,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
                       onClick={() => setActiveTab(tab.id)}
                       className={`relative flex items-center gap-1.5 px-3 py-3 text-xs font-medium whitespace-nowrap border-b-2 shrink-0 ${
                         isActive
-                          ? "border-[#ea580c] text-zinc-900"
+                          ? "border-ardal text-zinc-900"
                           : "border-transparent text-zinc-400 hover:text-zinc-700 hover:border-zinc-300"
                       }`}
                       style={{
@@ -842,7 +848,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
                       {hasFilled && (
                         <span
                           className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                            isActive ? "bg-[#ea580c]" : "bg-emerald-500"
+                            isActive ? "bg-ardal" : "bg-emerald-500"
                           }`}
                         />
                       )}
@@ -970,7 +976,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
                               className="text-emerald-500 shrink-0"
                             />
                           ) : (
-                            <span className="text-[10px] text-[#ea580c] font-mono tabular-nums">
+                            <span className="text-[10px] text-ardal font-mono tabular-nums">
                               {incomplete.length}
                             </span>
                           )}
@@ -1062,7 +1068,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
                       <Warning
                         size={12}
                         weight="fill"
-                        className="text-[#ea580c]"
+                        className="text-ardal"
                       />
                       {incompleteCount} campo
                       {incompleteCount !== 1 ? "s" : ""} sin completar
@@ -1111,8 +1117,8 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
                   onClick={onEmit}
                   className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded active:scale-[0.98] active:translate-y-[1px] ${
                     activeTabIndex === TABS.length - 1
-                      ? "bg-[#ea580c] text-white hover:bg-[#c2410c]"
-                      : "border border-[#ea580c] text-[#ea580c] hover:bg-[#ea580c]/5"
+                      ? "bg-ardal text-white hover:bg-ardal-dark"
+                      : "border border-ardal text-ardal hover:bg-ardal/5"
                   }`}
                   style={{ transition: "all 0.15s var(--ease-spring)" }}
                 >
@@ -1133,13 +1139,13 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
         >
           <div className="bg-white rounded border border-zinc-200 p-6 max-w-sm w-full space-y-4">
             <div className="flex items-center gap-2">
-              <PaperPlaneTilt size={16} className="text-[#ea580c] shrink-0" />
+              <PaperPlaneTilt size={16} className="text-ardal shrink-0" />
               <p className="text-sm font-semibold text-zinc-800">
                 Confirmar emisión del reporte
               </p>
             </div>
 
-            <div className="text-[11px] text-zinc-500 space-y-1 border-l-[3px] border-[#ea580c] pl-3">
+            <div className="text-[11px] text-zinc-500 space-y-1 border-l-[3px] border-ardal pl-3">
               <p className="font-medium text-zinc-700">
                 {enc?.turno} · {enc?.fecha}
               </p>
@@ -1170,7 +1176,7 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
               </button>
               <button
                 onClick={onEmitConfirm}
-                className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium bg-[#ea580c] text-white rounded hover:bg-[#c2410c] active:scale-[0.98]"
+                className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium bg-ardal text-white rounded hover:bg-ardal-dark active:scale-[0.98]"
                 style={{ transition: "all 0.15s var(--ease-spring)" }}
               >
                 <PaperPlaneTilt size={14} />

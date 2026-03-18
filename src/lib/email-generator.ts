@@ -5,7 +5,11 @@
 import type { Report, OrdenItem } from "./schema";
 import { OBJETIVO_MOLDES_COLADOS, OBJETIVO_RENDIMIENTO_HORA } from "./constants";
 
-export function generateEmailHTML(report: Report): string {
+type EmailSettings = { objetivoMoldesColados?: number; objetivoRendimientoHora?: number };
+
+export function generateEmailHTML(report: Report, settings?: EmailSettings): string {
+  const objMoldes = settings?.objetivoMoldesColados ?? OBJETIVO_MOLDES_COLADOS;
+  const objRend = settings?.objetivoRendimientoHora ?? OBJETIVO_RENDIMIENTO_HORA;
   const turnoShort = report.encabezado.turno.replace("TURNO ", "");
   const sections: string[] = [];
 
@@ -31,7 +35,7 @@ export function generateEmailHTML(report: Report): string {
   pRows.push(valRow("Accidentes", p.accidentes));
   pRows.push(valRow("Incidentes", p.incidentes));
   if (p.ausentes.length > 0) {
-    pRows.push(valRow("Cantidad ausentes", p.cantidadAusentes));
+    pRows.push(valRow("Cantidad ausentes", p.ausentes.length));
     for (const a of p.ausentes) {
       const motivo = a.motivo ? ` — ${a.motivo}` : "";
       pRows.push(valRow("Ausente", `${a.nombre}${motivo}`));
@@ -87,7 +91,18 @@ export function generateEmailHTML(report: Report): string {
       pRows.push(valRow("Capacitación", `${c.personal}${cap}`));
     }
   }
+  if (p.reemplazos && p.reemplazos.length > 0) {
+    pRows.push(subHeader("Reemplazos"));
+    for (const r of p.reemplazos) {
+      const comentario = r.comentario ? `: ${r.comentario}` : "";
+      pRows.push(valRow(r.reemplazado, `→ ${r.reemplazante}${comentario}`));
+    }
+  }
   pRows.push(txtRow("Otros comentarios", p.otrosComentarios));
+  pRows.push(txtRow("Demoras", p.demoras));
+  pRows.push(txtRow("Mantenimiento", p.mantenimiento));
+  pRows.push(txtRow("Limpieza", p.limpieza));
+  pRows.push(txtRow("Comentarios", p.comentarios));
   if (pRows.some((r) => r !== "")) {
     sections.push(section("Personal", pRows, "#dc2626"));
   }
@@ -110,14 +125,14 @@ export function generateEmailHTML(report: Report): string {
       mRows.push(bigRow("Horas de marcha", m3.horasMarcha, "HS"));
       if (hd(m3.rendimientoHora)) {
         const rend = m3.rendimientoHora as number;
-        const rendColor = rend >= OBJETIVO_RENDIMIENTO_HORA ? "#16a34a" : "#dc2626";
+        const rendColor = rend >= objRend ? "#16a34a" : "#dc2626";
         mRows.push(bigRow("Rendimiento / hora", rend, "CM", rendColor));
         mRows.push(
           objectiveRow(
             "Objetivo rendimiento",
-            OBJETIVO_RENDIMIENTO_HORA,
+            objRend,
             "CM",
-            rend >= OBJETIVO_RENDIMIENTO_HORA
+            rend >= objRend
           )
         );
       }
@@ -127,6 +142,8 @@ export function generateEmailHTML(report: Report): string {
       mRows.push(valRow("Agua en uso", m3.aguaEnUso));
       mRows.push(txtRow("Mantenimiento", m3.mantenimiento));
       mRows.push(txtRow("Limpieza", m3.limpieza));
+      mRows.push(txtRow("Demoras", m3.demoras));
+      mRows.push(txtRow("Comentarios", m3.comentarios));
     }
     if (sbHas) {
       mRows.push(subHeader("Stock de Barro"));
@@ -134,6 +151,8 @@ export function generateEmailHTML(report: Report): string {
       mRows.push(bigRow("Recupero", sb.recupero, "MT"));
       mRows.push(txtRow("Comentarios", sb.comentarios));
       mRows.push(txtRow("Demoras", sb.demoras));
+      mRows.push(txtRow("Mantenimiento", sb.mantenimiento));
+      mRows.push(txtRow("Limpieza", sb.limpieza));
     }
     sections.push(section("Molino", mRows));
   }
@@ -146,17 +165,17 @@ export function generateEmailHTML(report: Report): string {
     scRows.push(valRow("Hora de inicio", sc.horaInicio));
     if (hd(sc.moldesColados)) {
       const moldes = sc.moldesColados as number;
-      const cumpleMoldes = moldes >= OBJETIVO_MOLDES_COLADOS;
+      const cumpleMoldes = moldes >= objMoldes;
       const moldesColor = cumpleMoldes ? "#16a34a" : "#dc2626";
       scRows.push(bigRow("Moldes colados", moldes, "UN", moldesColor));
       scRows.push(
-        objectiveRow("Objetivo moldes", OBJETIVO_MOLDES_COLADOS, "UN", cumpleMoldes)
+        objectiveRow("Objetivo moldes", objMoldes, "UN", cumpleMoldes)
       );
       if (!cumpleMoldes) {
         scRows.push(
           desvioRow(
             "Desvío vs objetivo",
-            moldes - OBJETIVO_MOLDES_COLADOS,
+            moldes - objMoldes,
             "moldes"
           )
         );
@@ -169,7 +188,7 @@ export function generateEmailHTML(report: Report): string {
     scRows.push(txtRow("Demoras", sc.demoras));
     scRows.push(txtRow("Mantenimiento", sc.mantenimiento));
     scRows.push(txtRow("Limpieza", sc.limpieza));
-    scRows.push(txtRow("Otros", sc.otros));
+    scRows.push(txtRow("Comentarios", sc.otros));
     sections.push(section("Sala de Colado", scRows));
   }
 
@@ -207,10 +226,14 @@ export function generateEmailHTML(report: Report): string {
 
   // ── ROTADOR ──
   const rot = report.rotador;
-  if (rot.arrastreNylon.length > 0 || rot.moldeFisurado.length > 0) {
+  if (hasAnyField(rot as unknown as Record<string, unknown>)) {
     const rRows: string[] = [];
     rRows.push(ordenListRow("Arrastre de nylon", rot.arrastreNylon));
     rRows.push(ordenListRow("Molde fisurado", rot.moldeFisurado));
+    rRows.push(txtRow("Demoras", rot.demoras));
+    rRows.push(txtRow("Mantenimiento", rot.mantenimiento));
+    rRows.push(txtRow("Limpieza", rot.limpieza));
+    rRows.push(txtRow("Comentarios", rot.comentarios));
     sections.push(section("Rotador", rRows));
   }
 
@@ -251,13 +274,22 @@ export function generateEmailHTML(report: Report): string {
     desRows.push(ordenListRow("Dintel desmoldado", des.dintelDesmoldado));
     desRows.push(ordenListRow("Falla en aspiración", des.fallaAspiracion));
     desRows.push(ordenListRow("Fuera de medida", des.fueraMedida));
-    if (des.ajustadas1era.activo) {
-      const a = des.ajustadas1era;
-      desRows.push(ajustadasRow("Ajustadas 1era", a.signo, a.cantidad, a.medida));
+    if (des.ajustadas1era.activo && des.ajustadas1era.lineas?.length > 0) {
+      for (const linea of des.ajustadas1era.lineas) {
+        desRows.push(ajustadasRow("Ajustadas 1era", linea.signo, linea.cantidad, linea.medida));
+      }
+    } else if (des.ajustadas1era.activo && "signo" in des.ajustadas1era) {
+      // Old format: { activo, signo, cantidad, medida } — sin lineas
+      const old = des.ajustadas1era as unknown as { signo: string; cantidad: number | null; medida: string };
+      desRows.push(ajustadasRow("Ajustadas 1era", old.signo, old.cantidad, old.medida));
     }
-    if (des.ajustadasReproceso.activo) {
-      const a = des.ajustadasReproceso;
-      desRows.push(ajustadasRow("Ajustadas reproceso", a.signo, a.cantidad, a.medida));
+    if (des.ajustadasReproceso.activo && des.ajustadasReproceso.lineas?.length > 0) {
+      for (const linea of des.ajustadasReproceso.lineas) {
+        desRows.push(ajustadasRow("Ajustadas reproceso", linea.signo, linea.cantidad, linea.medida));
+      }
+    } else if (des.ajustadasReproceso.activo && "signo" in des.ajustadasReproceso) {
+      const old = des.ajustadasReproceso as unknown as { signo: string; cantidad: number | null; medida: string };
+      desRows.push(ajustadasRow("Ajustadas reproceso", old.signo, old.cantidad, old.medida));
     }
     desRows.push(txtRow("Demoras", des.demoras));
     desRows.push(txtRow("Mantenimiento", des.mantenimiento));
@@ -280,15 +312,17 @@ export function generateEmailHTML(report: Report): string {
 
   // ── SCRAP ──
   const scrap = report.scrap;
-  if (hd(scrap.cerradoPct) || hd(scrap.parcialPct) || hd(scrap.moldesPendientes)) {
+  if (hasAnyField(scrap as unknown as Record<string, unknown>)) {
     const sRows: string[] = [];
-    if (hd(scrap.cerradoPct))
+    if (hd(scrap.cerradoPct)) {
       sRows.push(
         bigRow(
           "Scrap cerrado (desmolde completo)",
           fmtPct(scrap.cerradoPct)
         )
       );
+      sRows.push(txtRow("Fecha scrap cerrado", scrap.fechaScrapCerrado));
+    }
     if (hd(scrap.parcialPct))
       sRows.push(
         bigRow(
@@ -299,6 +333,10 @@ export function generateEmailHTML(report: Report): string {
     sRows.push(
       bigRow("Moldes pendientes a desmoldar", scrap.moldesPendientes, "moldes")
     );
+    sRows.push(txtRow("Demoras", scrap.demoras));
+    sRows.push(txtRow("Mantenimiento", scrap.mantenimiento));
+    sRows.push(txtRow("Limpieza", scrap.limpieza));
+    sRows.push(txtRow("Comentarios", scrap.comentarios));
     sections.push(section("Scrap", sRows, "#dc2626"));
   }
 
@@ -350,16 +388,23 @@ export function generateEmailHTML(report: Report): string {
   }
 
   // ── AUTOELEVADORES ──
-  if (report.autoelevadores.lista.length > 0) {
+  const auto = report.autoelevadores;
+  if (hasAnyField(auto as unknown as Record<string, unknown>)) {
     const autoRows: string[] = [];
-    autoRows.push(subHeader("Operadores"));
-    for (const item of report.autoelevadores.lista) {
-      if (hd(item.operador)) {
-        autoRows.push(
-          valRow(item.operador, `${item.desdeHora} → ${item.hastaHora}`)
-        );
+    if (auto.lista.length > 0) {
+      autoRows.push(subHeader("Operadores"));
+      for (const item of auto.lista) {
+        if (hd(item.operador)) {
+          autoRows.push(
+            valRow(item.operador, `${item.desdeHora} → ${item.hastaHora}`)
+          );
+        }
       }
     }
+    autoRows.push(txtRow("Demoras", auto.demoras));
+    autoRows.push(txtRow("Mantenimiento", auto.mantenimiento));
+    autoRows.push(txtRow("Limpieza", auto.limpieza));
+    autoRows.push(txtRow("Comentarios", auto.comentarios));
     sections.push(section("Autoelevadores", autoRows));
   }
 

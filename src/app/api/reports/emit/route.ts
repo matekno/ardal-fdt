@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getAppSettings } from "@/lib/settings";
-import { reportSchema, compilarResumenMantenimiento } from "@/lib/schema";
+import { createReportSchema, compilarResumenMantenimiento } from "@/lib/schema";
 import { extractMetrics } from "@/lib/report-metrics";
 import { generateEmailHTML, generateEmailSubject } from "@/lib/email-generator";
 import nodemailer from "nodemailer";
@@ -19,7 +19,9 @@ export async function POST(req: Request) {
     return Response.json({ error: "invalid_json" }, { status: 400 });
   }
 
-  const parsed = reportSchema.safeParse(body);
+  const settings = await getAppSettings();
+  const dynamicSchema = createReportSchema(settings);
+  const parsed = dynamicSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json(
       { error: "validation_error", issues: parsed.error.issues },
@@ -59,13 +61,23 @@ export async function POST(req: Request) {
   }
 
   // Generate and send email
-  const html = generateEmailHTML(data);
+  const html = generateEmailHTML(data, settings);
   const subject = generateEmailSubject(data);
-
-  const settings = await getAppSettings();
   const emailTo = settings.emailTo;
   if (!emailTo) {
     return Response.json({ error: "email_to_not_configured" }, { status: 500 });
+  }
+
+  if (process.env.NODE_ENV === "development") {
+    console.log("[emit] Test mode: email skipped");
+    console.log("[emit] Subject:", subject);
+    console.log("[emit] To:", emailTo);
+
+    return Response.json({
+      id: reportId,
+      testMode: true,
+      message: "Email bloqueado en modo testeo",
+    });
   }
 
   try {

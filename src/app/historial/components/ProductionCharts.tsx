@@ -5,12 +5,15 @@ import {
   ReferenceLine, BarChart, Bar, ResponsiveContainer, Legend,
 } from "recharts";
 import type { ReportRow } from "./HistorialView";
-import { OBJETIVO_MOLDES_COLADOS, OBJETIVO_RENDIMIENTO_HORA } from "@/lib/constants";
 
-type Props = { reports: ReportRow[] };
+type Props = {
+  reports: ReportRow[];
+  objetivoMoldesColados: number;
+  objetivoRendimientoHora: number;
+};
 
 const TURNO_COLOR: Record<string, string> = {
-  "TURNO MAÑANA": "#ea580c",
+  "TURNO MAÑANA": "var(--color-ardal)",
   "TURNO TARDE": "#0284c7",
   "TURNO NOCHE": "#7c3aed",
 };
@@ -20,7 +23,7 @@ function shortDate(fecha: string) {
   return `${d}/${m}`;
 }
 
-export function ProductionCharts({ reports }: Props) {
+export function ProductionCharts({ reports, objetivoMoldesColados, objetivoRendimientoHora }: Props) {
   // Sort ascending by fecha for charts
   const sorted = [...reports].sort((a, b) => a.fecha.localeCompare(b.fecha));
 
@@ -32,7 +35,7 @@ export function ProductionCharts({ reports }: Props) {
     rendimiento: r.molino3RendimientoHora,
     pallets: r.transformacionTotalPallets ?? 0,
     ausentes: r.cantidadAusentes ?? 0,
-    fill: TURNO_COLOR[r.turno] ?? "#ea580c",
+    fill: TURNO_COLOR[r.turno] ?? "var(--color-ardal)",
   }));
 
   return (
@@ -51,7 +54,7 @@ export function ProductionCharts({ reports }: Props) {
               contentStyle={{ fontSize: 11, borderRadius: 6, border: "1px solid #e4e4e7" }}
               labelStyle={{ fontWeight: 600, color: "#18181b" }}
             />
-            <ReferenceLine y={OBJETIVO_MOLDES_COLADOS} stroke="#ea580c" strokeDasharray="4 4" label={{ value: `Obj ${OBJETIVO_MOLDES_COLADOS}`, fontSize: 10, fill: "#ea580c", position: "right" }} />
+            <ReferenceLine y={objetivoMoldesColados} stroke="var(--color-ardal)" strokeDasharray="4 4" label={{ value: `Obj ${objetivoMoldesColados}`, fontSize: 10, fill: "var(--color-ardal)", position: "right" }} />
             <Bar dataKey="moldesColados" name="Colados" radius={[2, 2, 0, 0]}>
               {chartData.map((entry, i) => (
                 <rect key={i} fill={entry.fill} />
@@ -75,14 +78,14 @@ export function ProductionCharts({ reports }: Props) {
               contentStyle={{ fontSize: 11, borderRadius: 6, border: "1px solid #e4e4e7" }}
               labelStyle={{ fontWeight: 600, color: "#18181b" }}
             />
-            <ReferenceLine y={OBJETIVO_RENDIMIENTO_HORA} stroke="#ea580c" strokeDasharray="4 4" label={{ value: `Obj ${OBJETIVO_RENDIMIENTO_HORA}`, fontSize: 10, fill: "#ea580c", position: "right" }} />
+            <ReferenceLine y={objetivoRendimientoHora} stroke="var(--color-ardal)" strokeDasharray="4 4" label={{ value: `Obj ${objetivoRendimientoHora}`, fontSize: 10, fill: "var(--color-ardal)", position: "right" }} />
             <Line
               type="monotone"
               dataKey="rendimiento"
               name="Rend/h"
-              stroke="#ea580c"
+              stroke="var(--color-ardal)"
               strokeWidth={2}
-              dot={{ r: 3, fill: "#ea580c" }}
+              dot={{ r: 3, fill: "var(--color-ardal)" }}
             />
           </LineChart>
         </ResponsiveContainer>

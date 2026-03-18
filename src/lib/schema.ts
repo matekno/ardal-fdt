@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { OBJETIVO_RENDIMIENTO_HORA } from "./constants";
 
 // ── Helpers ──
 
@@ -62,6 +63,12 @@ const capacitacionSchema = z.object({
   capacitacion: z.string(),
 });
 
+const reemplazoSchema = z.object({
+  reemplazado: z.string(),
+  reemplazante: z.string(),
+  comentario: z.string(),
+});
+
 // Nro de torta/molde (compartido por todos los campos "orden")
 const ordenItemSchema = z.object({
   valor: z.preprocess(
@@ -74,24 +81,42 @@ const ordenItemSchema = z.object({
   ),
 });
 
-const ajustadasDetalleSchema = z.object({
-  activo: z.boolean(),
+const ajustadasLineaSchema = z.object({
   signo: z.string(),    // "+" | "-" | ""
   cantidad: optNum,
   medida: z.string(),
+});
+
+const ajustadasBaseSchema = z.object({
+  activo: z.boolean(),
+  lineas: z.array(ajustadasLineaSchema).max(8),
 }).superRefine((data, ctx) => {
   if (data.activo) {
-    if (!data.signo) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requerido", path: ["signo"] });
+    if (data.lineas.length === 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Agregar al menos una línea", path: ["lineas"] });
     }
-    if (data.cantidad === null || data.cantidad === undefined) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requerido", path: ["cantidad"] });
-    }
-    if (!data.medida) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requerido", path: ["medida"] });
-    }
+    data.lineas.forEach((line, i) => {
+      if (!line.signo) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requerido", path: ["lineas", i, "signo"] });
+      if (line.cantidad == null) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requerido", path: ["lineas", i, "cantidad"] });
+      if (!line.medida) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requerido", path: ["lineas", i, "medida"] });
+    });
   }
 });
+
+// Migración: shape viejo { activo, signo, cantidad, medida } → nuevo { activo, lineas: [...] }
+const ajustadasDetalleSchema = z.preprocess((val) => {
+  if (val && typeof val === "object" && !Array.isArray(val)) {
+    const obj = val as Record<string, unknown>;
+    if ("activo" in obj && "signo" in obj && !("lineas" in obj)) {
+      const hasData = obj.signo !== "" || obj.cantidad != null || obj.medida !== "";
+      return {
+        activo: obj.activo,
+        lineas: hasData ? [{ signo: obj.signo, cantidad: obj.cantidad, medida: obj.medida }] : [],
+      };
+    }
+  }
+  return val;
+}, ajustadasBaseSchema);
 
 const autoelevadorItemSchema = z.object({
   operador: z.string(),
@@ -131,37 +156,50 @@ export const personalSchema = z.object({
   }),
   vacaciones: z.array(z.object({ personal: z.string() })).max(8),
   capacitacion: z.array(capacitacionSchema).max(3),
+  reemplazos: z.array(reemplazoSchema).max(5),
   otrosComentarios: z.string(),
-});
-
-export const molino3Schema = z.object({
-  horasMarcha: reqNum.pipe(z.number().max(8, "Máximo 8 HS")),
-  rendimientoHora: reqNum,
-  cuerposMoliendaKG: reqNum,
-  causaBajoRendimiento: z.string(),
-  aguaEnUso: z.string(),
+  demoras: z.string(),
   mantenimiento: z.string(),
   limpieza: z.string(),
-}).superRefine((data, ctx) => {
-  const rend = typeof data.rendimientoHora === "number"
-    ? data.rendimientoHora
-    : Number(data.rendimientoHora);
-  if (!isNaN(rend) && rend < 50) {
-    if (!data.causaBajoRendimiento || !data.causaBajoRendimiento.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Obligatorio cuando el rendimiento es menor a 50 CM",
-        path: ["causaBajoRendimiento"],
-      });
-    }
-  }
+  comentarios: z.string(),
 });
+
+function createMolino3Schema(objetivoRendimientoHora: number) {
+  return z.object({
+    horasMarcha: reqNum.pipe(z.number().max(8, "Máximo 8 HS")),
+    rendimientoHora: reqNum,
+    cuerposMoliendaKG: reqNum,
+    causaBajoRendimiento: z.string(),
+    aguaEnUso: z.string(),
+    mantenimiento: z.string(),
+    limpieza: z.string(),
+    demoras: z.string(),
+    comentarios: z.string(),
+  }).superRefine((data, ctx) => {
+    const rend = typeof data.rendimientoHora === "number"
+      ? data.rendimientoHora
+      : Number(data.rendimientoHora);
+    if (!isNaN(rend) && rend < objetivoRendimientoHora) {
+      if (!data.causaBajoRendimiento || !data.causaBajoRendimiento.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Obligatorio cuando el rendimiento es menor a ${objetivoRendimientoHora} CM`,
+          path: ["causaBajoRendimiento"],
+        });
+      }
+    }
+  });
+}
+
+export const molino3Schema = createMolino3Schema(OBJETIVO_RENDIMIENTO_HORA);
 
 export const stockBarroSchema = z.object({
   arena: reqNum,
   recupero: reqNum,
   comentarios: z.string(),
   demoras: z.string(),
+  mantenimiento: z.string(),
+  limpieza: z.string(),
 });
 
 export const salaControlSchema = z.object({
@@ -202,6 +240,10 @@ export const corteDesmanteladoSchema = z.object({
 export const rotadorSchema = z.object({
   arrastreNylon: z.array(ordenItemSchema).max(5),
   moldeFisurado: z.array(ordenItemSchema).max(5),
+  demoras: z.string(),
+  mantenimiento: z.string(),
+  limpieza: z.string(),
+  comentarios: z.string(),
 });
 
 export const precuradoAutoclavesSchema = z.object({
@@ -252,8 +294,13 @@ export const granalladoSchema = z.object({
 
 export const scrapSchema = z.object({
   cerradoPct: optNum,
+  fechaScrapCerrado: z.string(),
   parcialPct: reqNum,
   moldesPendientes: optNum,
+  demoras: z.string(),
+  mantenimiento: z.string(),
+  limpieza: z.string(),
+  comentarios: z.string(),
 });
 
 const transformacionSizeSchema = z.object({
@@ -279,6 +326,10 @@ export const transformacionSchema = z.object({
 
 export const autoelevadoresSchema = z.object({
   lista: z.array(autoelevadorItemSchema).max(8),
+  demoras: z.string(),
+  mantenimiento: z.string(),
+  limpieza: z.string(),
+  comentarios: z.string(),
 });
 
 const resumenMantenimientoItemSchema = z.object({
@@ -308,13 +359,20 @@ export const reportSchema = z.object({
   resumenMantenimiento: z.array(resumenMantenimientoItemSchema),
 });
 
+// ── Schema dinámico (threshold desde settings) ──
+
+export function createReportSchema(settings: { objetivoRendimientoHora: number }): z.ZodType<Report> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return z.object({ ...(reportSchema.shape as any), molino3: createMolino3Schema(settings.objetivoRendimientoHora) }) as unknown as z.ZodType<Report>;
+}
+
 // ── Tipos derivados ──
 
 export type Report = z.infer<typeof reportSchema>;
 export type Encabezado = z.infer<typeof encabezadoSchema>;
 export type Personal = z.infer<typeof personalSchema>;
 export type TransformacionSize = z.infer<typeof transformacionSizeSchema>;
-export type AjustadasDetalle = z.infer<typeof ajustadasDetalleSchema>;
+export type AjustadasDetalle = z.infer<typeof ajustadasBaseSchema>;
 export type OrdenItem = z.infer<typeof ordenItemSchema>;
 
 // ── Factory ──
@@ -332,9 +390,7 @@ export function createEmptyReport(): Report {
 
   const emptyAjustadas = (): AjustadasDetalle => ({
     activo: false,
-    signo: "",
-    cantidad: null,
-    medida: "",
+    lineas: [],
   });
 
   return {
@@ -353,7 +409,12 @@ export function createEmptyReport(): Report {
       personalNuevo: { cantidad: null, lista: [] },
       vacaciones: [],
       capacitacion: [],
+      reemplazos: [],
       otrosComentarios: "",
+      demoras: "",
+      mantenimiento: "",
+      limpieza: "",
+      comentarios: "",
     },
     molino3: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -366,6 +427,8 @@ export function createEmptyReport(): Report {
       aguaEnUso: "",
       mantenimiento: "",
       limpieza: "",
+      demoras: "",
+      comentarios: "",
     },
     stockBarro: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -374,6 +437,8 @@ export function createEmptyReport(): Report {
       recupero: null as any,
       comentarios: "",
       demoras: "",
+      mantenimiento: "",
+      limpieza: "",
     },
     salaControl: {
       horaInicio: "",
@@ -413,6 +478,10 @@ export function createEmptyReport(): Report {
     rotador: {
       arrastreNylon: [],
       moldeFisurado: [],
+      demoras: "",
+      mantenimiento: "",
+      limpieza: "",
+      comentarios: "",
     },
     precuradoAutoclaves: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -455,9 +524,14 @@ export function createEmptyReport(): Report {
     },
     scrap: {
       cerradoPct: null,
+      fechaScrapCerrado: "",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       parcialPct: null as any,
       moldesPendientes: null,
+      demoras: "",
+      mantenimiento: "",
+      limpieza: "",
+      comentarios: "",
     },
     transformacion: {
       x15: emptySize(),
@@ -469,7 +543,7 @@ export function createEmptyReport(): Report {
       limpieza: "",
       comentarios: "",
     },
-    autoelevadores: { lista: [] },
+    autoelevadores: { lista: [], demoras: "", mantenimiento: "", limpieza: "", comentarios: "" },
     resumenMantenimiento: [],
   };
 }
@@ -480,15 +554,20 @@ export function compilarResumenMantenimiento(
   report: Report
 ): { area: string; texto: string }[] {
   const areas = [
+    { area: "Personal", texto: report.personal.mantenimiento },
     { area: "Molino (3)", texto: report.molino3.mantenimiento },
+    { area: "Stock de Barro", texto: report.stockBarro.mantenimiento },
     { area: "Sala de Colado", texto: report.salaControl.mantenimiento },
     { area: "Maduración", texto: report.maduracion.mantenimiento },
     { area: "Corte / Desmantelado", texto: report.corteDesmantelado.mantenimiento },
+    { area: "Rotador", texto: report.rotador.mantenimiento },
     { area: "Precurado / Autoclaves", texto: report.precuradoAutoclaves.mantenimiento },
     { area: "Caldera", texto: report.caldera.mantenimiento },
     { area: "Desmolde", texto: report.desmolde.mantenimiento },
     { area: "Granallado", texto: report.granallado.mantenimiento },
     { area: "Transformación", texto: report.transformacion.mantenimiento },
+    { area: "Scrap", texto: report.scrap.mantenimiento },
+    { area: "Autoelevadores", texto: report.autoelevadores.mantenimiento },
   ];
 
   return areas

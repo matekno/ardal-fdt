@@ -16,7 +16,7 @@ export function CheckboxField({ name, label }: CheckboxFieldProps) {
         {...register(name)}
         type="checkbox"
         id={name}
-        className="w-4 h-4 rounded cursor-pointer accent-[#ea580c]"
+        className="w-4 h-4 rounded cursor-pointer accent-ardal"
       />
       <label
         htmlFor={name}

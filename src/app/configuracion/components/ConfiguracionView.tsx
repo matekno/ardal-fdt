@@ -121,12 +121,12 @@ function StringListEditor({
           onChange={(e) => setNewItem(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && addItem()}
           placeholder="Nuevo elemento..."
-          className="flex-1 px-2 py-1.5 text-xs border border-zinc-200 rounded bg-white focus:border-[#ea580c] focus:ring-0 focus:outline-none font-mono"
+          className="flex-1 px-2 py-1.5 text-xs border border-zinc-200 rounded bg-white focus:border-ardal focus:ring-0 focus:outline-none font-mono"
         />
         <button
           onClick={addItem}
           disabled={!newItem.trim()}
-          className="px-2.5 py-1.5 text-xs font-medium text-[#ea580c] border border-[#ea580c]/30 rounded hover:bg-[#ea580c]/5 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-2.5 py-1.5 text-xs font-medium text-ardal border border-ardal/30 rounded hover:bg-ardal/5 disabled:opacity-40 disabled:cursor-not-allowed"
           style={{ transition: "all 0.15s" }}
         >
           <Plus size={12} />
@@ -139,7 +139,7 @@ function StringListEditor({
         <button
           onClick={() => save(items)}
           disabled={status === "saving"}
-          className="px-4 py-1.5 text-xs font-medium bg-[#ea580c] text-white rounded hover:bg-[#c2410c] disabled:opacity-50"
+          className="px-4 py-1.5 text-xs font-medium bg-ardal text-white rounded hover:bg-ardal-dark disabled:opacity-50"
           style={{ transition: "all 0.15s" }}
         >
           Guardar lista
@@ -159,7 +159,7 @@ function NumberEditor({
   initialValue: number;
   unit?: string;
 }) {
-  const [value, setValue] = useState(initialValue);
+  const [value, setValue] = useState(String(initialValue));
   const { status, save } = useSaveSetting(settingKey);
 
   return (
@@ -167,14 +167,15 @@ function NumberEditor({
       <input
         type="number"
         value={value}
-        onChange={(e) => setValue(Number(e.target.value))}
-        className="w-24 px-2 py-1.5 text-sm border border-zinc-200 rounded bg-white focus:border-[#ea580c] focus:outline-none font-mono tabular-nums"
+        onChange={(e) => setValue(e.target.value)}
+        onWheel={(e) => e.currentTarget.blur()}
+        className="w-24 px-2 py-1.5 text-sm border border-zinc-200 rounded bg-white focus:border-ardal focus:outline-none font-mono tabular-nums"
       />
       {unit && <span className="text-xs text-zinc-400">{unit}</span>}
       <button
-        onClick={() => save(value)}
+        onClick={() => save(Number(value))}
         disabled={status === "saving"}
-        className="px-3 py-1.5 text-xs font-medium bg-[#ea580c] text-white rounded hover:bg-[#c2410c] disabled:opacity-50"
+        className="px-3 py-1.5 text-xs font-medium bg-ardal text-white rounded hover:bg-ardal-dark disabled:opacity-50"
         style={{ transition: "all 0.15s" }}
       >
         Guardar
@@ -206,12 +207,12 @@ function StringEditor({
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder={placeholder}
-        className="flex-1 max-w-xs px-2 py-1.5 text-sm border border-zinc-200 rounded bg-white focus:border-[#ea580c] focus:outline-none"
+        className="flex-1 max-w-xs px-2 py-1.5 text-sm border border-zinc-200 rounded bg-white focus:border-ardal focus:outline-none"
       />
       <button
         onClick={() => save(value)}
         disabled={status === "saving"}
-        className="px-3 py-1.5 text-xs font-medium bg-[#ea580c] text-white rounded hover:bg-[#c2410c] disabled:opacity-50"
+        className="px-3 py-1.5 text-xs font-medium bg-ardal text-white rounded hover:bg-ardal-dark disabled:opacity-50"
         style={{ transition: "all 0.15s" }}
       >
         Guardar
@@ -231,7 +232,7 @@ type SettingSection = {
 export function ConfiguracionView({ settings }: { settings: AppSettings }) {
   const sections: SettingSection[] = [
     {
-      icon: <Users size={14} className="text-[#ea580c]" />,
+      icon: <Users size={14} className="text-ardal" />,
       title: "Supervisores",
       description: "Lista de supervisores disponibles en el encabezado del reporte.",
       content: (
@@ -242,7 +243,7 @@ export function ConfiguracionView({ settings }: { settings: AppSettings }) {
       ),
     },
     {
-      icon: <Gear size={14} className="text-[#ea580c]" />,
+      icon: <Gear size={14} className="text-ardal" />,
       title: "Turnos",
       description: "Turnos disponibles para seleccionar en el encabezado.",
       content: (
@@ -250,7 +251,7 @@ export function ConfiguracionView({ settings }: { settings: AppSettings }) {
       ),
     },
     {
-      icon: <Truck size={14} className="text-[#ea580c]" />,
+      icon: <Truck size={14} className="text-ardal" />,
       title: "Operarios / Autoelevadoristas",
       description: "Personal disponible para asignar en autoelevadores y otras secciones.",
       content: (
@@ -261,7 +262,7 @@ export function ConfiguracionView({ settings }: { settings: AppSettings }) {
       ),
     },
     {
-      icon: <ClipboardText size={14} className="text-[#ea580c]" />,
+      icon: <ClipboardText size={14} className="text-ardal" />,
       title: "Motivos de ausencia",
       description: "Códigos de motivo de ausencia del personal.",
       content: (
@@ -272,7 +273,7 @@ export function ConfiguracionView({ settings }: { settings: AppSettings }) {
       ),
     },
     {
-      icon: <Briefcase size={14} className="text-[#ea580c]" />,
+      icon: <Briefcase size={14} className="text-ardal" />,
       title: "Puestos de trabajo",
       description: "Puestos disponibles para cambios de puesto en sección personal.",
       content: (
@@ -283,7 +284,7 @@ export function ConfiguracionView({ settings }: { settings: AppSettings }) {
       ),
     },
     {
-      icon: <ChartBar size={14} className="text-[#ea580c]" />,
+      icon: <ChartBar size={14} className="text-ardal" />,
       title: "Objetivos de producción",
       description: "Metas de referencia para el molino y sala de colado.",
       content: (
@@ -312,7 +313,7 @@ export function ConfiguracionView({ settings }: { settings: AppSettings }) {
       ),
     },
     {
-      icon: <Envelope size={14} className="text-[#ea580c]" />,
+      icon: <Envelope size={14} className="text-ardal" />,
       title: "Email destinatario",
       description: "Dirección de email a la que se envían los reportes de fin de turno.",
       content: (
@@ -332,7 +333,7 @@ export function ConfiguracionView({ settings }: { settings: AppSettings }) {
       <header className="bg-zinc-950 border-b border-zinc-800 px-4 md:px-6 py-3 sticky top-0 z-20">
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="w-2 h-2 rounded-full bg-[#ea580c] shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-ardal shrink-0" />
             <span className="text-white font-bold text-sm tracking-tight">FDT</span>
             <span className="text-zinc-500 text-xs hidden sm:inline">Configuración</span>
           </div>

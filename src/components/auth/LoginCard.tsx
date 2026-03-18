@@ -9,7 +9,7 @@ export function LoginCard({ isUnauthorized }: { isUnauthorized: boolean }) {
       {/* Mobile branding */}
       <div className="lg:hidden mb-8">
         <div className="flex items-center gap-2 mb-2">
-          <span className="w-2 h-2 rounded-full bg-[#ea580c]" />
+          <span className="w-2 h-2 rounded-full bg-ardal" />
           <span className="text-zinc-400 text-xs tracking-[0.18em] uppercase font-medium">
             Ardal / Retak
           </span>

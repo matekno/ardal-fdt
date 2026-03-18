@@ -54,7 +54,7 @@ export function HomeClient({ supervisores, turnos }: Props) {
 
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-16">
-            <span className="w-2 h-2 rounded-full bg-[#ea580c]" />
+            <span className="w-2 h-2 rounded-full bg-ardal" />
             <span className="text-zinc-400 text-xs font-medium tracking-[0.18em] uppercase">
               Ardal / Retak
             </span>
@@ -90,7 +90,7 @@ export function HomeClient({ supervisores, turnos }: Props) {
         {/* Mobile branding */}
         <div className="lg:hidden mb-8">
           <div className="flex items-center gap-2 mb-2">
-            <span className="w-2 h-2 rounded-full bg-[#ea580c]" />
+            <span className="w-2 h-2 rounded-full bg-ardal" />
             <span className="text-zinc-400 text-xs tracking-[0.18em] uppercase font-medium">
               Ardal / Retak
             </span>
@@ -124,7 +124,7 @@ export function HomeClient({ supervisores, turnos }: Props) {
             {/* Primary: Reporte */}
             <button
               onClick={() => setView("nuevo-reporte")}
-              className="group w-full flex items-center justify-between px-6 py-5 bg-[#ea580c] text-white rounded-lg hover:bg-[#c2410c] active:scale-[0.99] active:translate-y-[1px] mb-3"
+              className="group w-full flex items-center justify-between px-6 py-5 bg-ardal text-white rounded-lg hover:bg-ardal-dark active:scale-[0.99] active:translate-y-[1px] mb-3"
               style={{ transition: "all 0.2s var(--ease-spring)" }}
             >
               <div className="flex items-center gap-3">
@@ -254,7 +254,7 @@ export function HomeClient({ supervisores, turnos }: Props) {
                     onClick={() => setTurno(t)}
                     className={`py-2.5 text-[13px] font-medium rounded-md border active:scale-[0.97] active:translate-y-[1px] ${
                       turno === t
-                        ? "bg-[#ea580c] border-[#ea580c] text-white"
+                        ? "bg-ardal border-ardal text-white"
                         : "bg-white border-zinc-200 text-zinc-600 hover:border-zinc-400 hover:text-zinc-800"
                     }`}
                     style={{ transition: "all 0.2s var(--ease-spring)" }}
@@ -267,7 +267,7 @@ export function HomeClient({ supervisores, turnos }: Props) {
 
             <button
               onClick={handleStart}
-              className="w-full py-3 px-6 bg-[#ea580c] text-white font-medium text-sm rounded-md hover:bg-[#c2410c] active:scale-[0.99] active:translate-y-[1px]"
+              className="w-full py-3 px-6 bg-ardal text-white font-medium text-sm rounded-md hover:bg-ardal-dark active:scale-[0.99] active:translate-y-[1px]"
               style={{ transition: "all 0.2s var(--ease-spring)" }}
             >
               Iniciar Reporte

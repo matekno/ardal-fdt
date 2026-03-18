@@ -30,7 +30,7 @@ export default async function LoginPage({
 
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-16">
-            <span className="w-2 h-2 rounded-full bg-[#ea580c]" />
+            <span className="w-2 h-2 rounded-full bg-ardal" />
             <span className="text-zinc-400 text-xs font-medium tracking-[0.18em] uppercase">
               Ardal / Retak
             </span>

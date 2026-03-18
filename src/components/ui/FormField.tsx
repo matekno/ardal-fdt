@@ -24,16 +24,19 @@ export function FormField({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em]">
-        {label}
-        {required && <span className="text-[#ea580c] ml-0.5">*</span>}
-      </label>
+      {label && (
+        <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em]">
+          {label}
+          {required && <span className="text-ardal ml-0.5">*</span>}
+        </label>
+      )}
       <div className="flex items-center gap-2">
         <input
           {...register(name)}
           type={type}
           placeholder={placeholder}
           step={type === "number" ? "any" : undefined}
+          onWheel={type === "number" ? (e) => e.currentTarget.blur() : undefined}
           className={`flex-1 ${error ? "border-red-400 bg-red-50" : ""}`}
         />
         {unit && (

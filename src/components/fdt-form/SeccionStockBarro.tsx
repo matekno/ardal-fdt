@@ -13,6 +13,8 @@ export function SeccionStockBarro() {
       </div>
       <TextAreaField name="stockBarro.comentarios" label="Comentarios" />
       <TextAreaField name="stockBarro.demoras" label="Demoras" />
+      <TextAreaField name="stockBarro.mantenimiento" label="Mantenimiento" />
+      <TextAreaField name="stockBarro.limpieza" label="Limpieza" />
     </SectionCard>
   );
 }
