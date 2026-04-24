@@ -110,6 +110,20 @@ const EMIT_STEPS = [
   "Completado",
 ];
 
+const EMIT_WINDOWS: Record<
+  string,
+  { startHour: number; endHour: number; label: string }
+> = {
+  "TURNO MAÑANA": { startHour: 11, endHour: 15, label: "11:00 a 15:00" },
+  "TURNO TARDE": { startHour: 19, endHour: 23, label: "19:00 a 23:00" },
+  "TURNO NOCHE": { startHour: 3, endHour: 7, label: "03:00 a 07:00" },
+};
+
+type EmitWindowWarning = {
+  expectedWindow: string;
+  currentTime: string;
+};
+
 function hasAnyData(obj: Record<string, unknown>): boolean {
   return Object.values(obj).some((v) => {
     if (Array.isArray(v)) return v.length > 0;
@@ -124,6 +138,49 @@ function hasAnyData(obj: Record<string, unknown>): boolean {
 
 function sleep(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms));
+}
+
+function parseLocalDate(date: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  return new Date(year, month, day);
+}
+
+function formatTime(date: Date) {
+  return date.toLocaleTimeString("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
+function getEmitWindowWarning(
+  fecha: string | undefined,
+  turno: string | undefined,
+  now: Date
+): EmitWindowWarning | null {
+  if (!fecha || !turno) return null;
+
+  const window = EMIT_WINDOWS[turno];
+  const reportDate = parseLocalDate(fecha);
+  if (!window || !reportDate) return null;
+
+  const start = new Date(reportDate);
+  start.setHours(window.startHour, 0, 0, 0);
+
+  const end = new Date(reportDate);
+  end.setHours(window.endHour, 0, 0, 0);
+
+  if (now >= start && now <= end) return null;
+
+  return {
+    expectedWindow: `${window.label} del ${fecha}`,
+    currentTime: formatTime(now),
+  };
 }
 
 /** Returns true if react-hook-form has a validation error at the given path */
@@ -355,6 +412,11 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
     | { fecha?: string; turno?: string; supervisor?: string }
     | undefined;
   const encabezadoFilled = !!(enc?.fecha && enc?.turno && enc?.supervisor);
+  const emitWindowWarning = getEmitWindowWarning(
+    enc?.fecha,
+    enc?.turno,
+    new Date()
+  );
 
   // Calculate incomplete required fields (respects conditional fields)
   const incompleteCount = requiredFieldsMap.reduce((count, section) => {
@@ -1160,6 +1222,25 @@ export function FDTFormWrapper({ settings }: { settings: AppSettings }) {
               </p>
               <p>Para: {settings.emailTo || "no configurado"}</p>
             </div>
+
+            {emitWindowWarning && (
+              <div className="flex gap-2 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-900">
+                <Warning
+                  size={14}
+                  weight="fill"
+                  className="mt-0.5 shrink-0 text-amber-500"
+                />
+                <div className="space-y-0.5">
+                  <p className="font-semibold">Horario fuera de rango</p>
+                  <p>
+                    Este reporte debería emitirse entre{" "}
+                    {emitWindowWarning.expectedWindow}. Hora actual:{" "}
+                    {emitWindowWarning.currentTime}.
+                  </p>
+                  <p>Podés emitirlo igual si corresponde.</p>
+                </div>
+              </div>
+            )}
 
             <p className="text-[11px] text-red-500 flex gap-1.5 items-start">
               <Warning size={11} weight="fill" className="mt-0.5 shrink-0" />
