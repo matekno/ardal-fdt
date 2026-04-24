@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { getAppSettings } from "@/lib/settings";
 import { HistorialView } from "./components/HistorialView";
+import type { ReportRow } from "./components/HistorialView";
 
 const LIMIT = 50;
 
@@ -32,6 +33,18 @@ const SELECT = {
   tieneIncidentes: true,
   tieneAccidentes: true,
 } as const;
+
+const TURNO_DESC: Record<string, number> = {
+  "TURNO NOCHE": 3,
+  "TURNO TARDE": 2,
+  "TURNO MAÑANA": 1,
+};
+
+function compareReportsDesc(a: ReportRow, b: ReportRow) {
+  const byDate = b.fecha.localeCompare(a.fecha);
+  if (byDate !== 0) return byDate;
+  return (TURNO_DESC[b.turno] ?? 0) - (TURNO_DESC[a.turno] ?? 0);
+}
 
 export default async function HistorialPage({
   searchParams,
@@ -66,18 +79,19 @@ export default async function HistorialPage({
         }
       : {}),
   };
+  const offset = (page - 1) * LIMIT;
 
-  const [reports, total, settings] = await Promise.all([
+  const [allReports, settings] = await Promise.all([
     prisma.report.findMany({
       where,
-      orderBy: [{ fecha: "desc" }, { turno: "asc" }],
-      skip: (page - 1) * LIMIT,
-      take: LIMIT,
+      orderBy: [{ fecha: "desc" }],
       select: SELECT,
     }),
-    prisma.report.count({ where }),
     getAppSettings(),
   ]);
+  const sortedReports = (allReports as ReportRow[]).sort(compareReportsDesc);
+  const reports = sortedReports.slice(offset, offset + LIMIT);
+  const total = sortedReports.length;
 
   return (
     <HistorialView
