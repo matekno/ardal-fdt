@@ -18,21 +18,32 @@ const TURNO_COLOR: Record<string, string> = {
   "TURNO NOCHE": "#7c3aed",
 };
 
+const TURNO_ASC: Record<string, number> = {
+  "TURNO MAÑANA": 1,
+  "TURNO TARDE": 2,
+  "TURNO NOCHE": 3,
+};
+
 function shortDate(fecha: string) {
   const [, m, d] = fecha.split("-");
   return `${d}/${m}`;
 }
 
 export function ProductionCharts({ reports, objetivoMoldesColados, objetivoRendimientoHora }: Props) {
-  // Sort ascending by fecha for charts
-  const sorted = [...reports].sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const sorted = [...reports].sort((a, b) => {
+    const byDate = a.fecha.localeCompare(b.fecha);
+    if (byDate !== 0) return byDate;
+    return (TURNO_ASC[a.turno] ?? 0) - (TURNO_ASC[b.turno] ?? 0);
+  });
 
   const chartData = sorted.map((r) => ({
-    fecha: shortDate(r.fecha),
+    fecha: `${shortDate(r.fecha)} ${r.turno.replace("TURNO ", "").slice(0, 1)}`,
     fechaFull: r.fecha,
     turno: r.turno.replace("TURNO ", ""),
     moldesColados: r.salaControlMoldesColados,
     rendimiento: r.molino3RendimientoHora,
+    stockArena: r.stockBarroArena,
+    stockRecupero: r.stockBarroRecupero,
     pallets: r.transformacionTotalPallets ?? 0,
     ausentes: r.cantidadAusentes ?? 0,
     fill: TURNO_COLOR[r.turno] ?? "var(--color-ardal)",
@@ -86,6 +97,60 @@ export function ProductionCharts({ reports, objetivoMoldesColados, objetivoRendi
               stroke="var(--color-ardal)"
               strokeWidth={2}
               dot={{ r: 3, fill: "var(--color-ardal)" }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Stock barro arena */}
+      <div className="bg-white border border-zinc-200 rounded-md p-4">
+        <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em] mb-4">
+          Stock Barro Arena en el Tiempo (MT)
+        </p>
+        <ResponsiveContainer width="100%" height={200}>
+          <LineChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f4f4f5" />
+            <XAxis dataKey="fecha" tick={{ fontSize: 10, fill: "#71717a" }} />
+            <YAxis tick={{ fontSize: 10, fill: "#71717a" }} />
+            <Tooltip
+              contentStyle={{ fontSize: 11, borderRadius: 6, border: "1px solid #e4e4e7" }}
+              labelStyle={{ fontWeight: 600, color: "#18181b" }}
+            />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+            <Line
+              type="monotone"
+              dataKey="stockArena"
+              name="Arena MT"
+              stroke="#0f766e"
+              strokeWidth={2}
+              dot={{ r: 3, fill: "#0f766e" }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Stock barro recupero */}
+      <div className="bg-white border border-zinc-200 rounded-md p-4">
+        <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em] mb-4">
+          Stock Barro Recupero en el Tiempo (MT)
+        </p>
+        <ResponsiveContainer width="100%" height={200}>
+          <LineChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f4f4f5" />
+            <XAxis dataKey="fecha" tick={{ fontSize: 10, fill: "#71717a" }} />
+            <YAxis tick={{ fontSize: 10, fill: "#71717a" }} />
+            <Tooltip
+              contentStyle={{ fontSize: 11, borderRadius: 6, border: "1px solid #e4e4e7" }}
+              labelStyle={{ fontWeight: 600, color: "#18181b" }}
+            />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+            <Line
+              type="monotone"
+              dataKey="stockRecupero"
+              name="Recupero MT"
+              stroke="#ca8a04"
+              strokeWidth={2}
+              dot={{ r: 3, fill: "#ca8a04" }}
             />
           </LineChart>
         </ResponsiveContainer>
